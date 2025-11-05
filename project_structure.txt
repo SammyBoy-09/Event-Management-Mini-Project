@@ -1,0 +1,60 @@
+Folder PATH listing for volume New Volume
+Volume serial number is 30B6-02CD
+D:.
+|   ARCHITECTURE.md
+|   CampusConnect Event Management App.make
+|   DOCUMENTATION_INDEX.md
+|   GETTING_STARTED.md
+|   project_structure.txt
+|   PROJECT_SUMMARY.md
+|   README.md
+|   setup.ps1
+|   setup.sh
+|   
++---backend
+|   |   .env
+|   |   .gitignore
+|   |   package.json
+|   |   README.md
+|   |   server.js
+|   |   
+|   +---config
+|   |       database.js
+|   |       
+|   +---controllers
+|   |       authController.js
+|   |       
+|   +---middleware
+|   |       authMiddleware.js
+|   |       
+|   +---models
+|   |       Student.js
+|   |       
+|   \---routes
+|           authRoutes.js
+|           
+\---frontend
+    |   .gitignore
+    |   App.js
+    |   app.json
+    |   babel.config.js
+    |   package.json
+    |   README.md
+    |   
+    +---api
+    |       api.js
+    |       
+    +---components
+    |       Button.js
+    |       InputField.js
+    |       LoadingSpinner.js
+    |       
+    +---constants
+    |       theme.js
+    |       
+    \---screens
+            HomeScreen.js
+            LandingPage.js
+            LoginScreen.js
+            RegisterScreen.js
+            
