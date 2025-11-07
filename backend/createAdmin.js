@@ -5,6 +5,7 @@
 
 require('dotenv').config();
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const Student = require('./models/Student');
 
 // MongoDB connection (using MONGO_URI from .env)
@@ -17,12 +18,16 @@ const createAdminUser = async () => {
     await mongoose.connect(MONGODB_URI);
     console.log('✅ Connected to MongoDB');
 
+    // Hash the password
+    const plainPassword = 'admin123';
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
     // Admin user details
     const adminData = {
       name: 'Admin User',
       usn: 'ADMIN001',
       email: 'admin@campusconnect.com',
-      password: 'admin123', // ⚠️ Change this password after first login!
+      password: hashedPassword, // Use hashed password
       year: 4,
       semester: 8,
       phone: '1234567890',
