@@ -47,7 +47,7 @@ exports.createEvent = async (req, res) => {
       isPublic,
       tags,
       createdBy: req.student.id,
-      status: req.student.role === 'admin' ? 'approved' : 'pending'
+      status: 'approved' // Auto-approve all events for now
     });
 
     // Populate creator info
@@ -94,11 +94,15 @@ exports.getAllEvents = async (req, res) => {
       query.category = category;
     }
 
-    // Status filter (admin can see all, others only approved)
+    // Status filter (admin can see all, others only approved + their own events)
     if (req.student.role === 'admin' && status) {
       query.status = status;
     } else {
-      query.status = 'approved';
+      // Non-admin users see approved events + their own pending events
+      query.$or = [
+        { status: 'approved' },
+        { createdBy: req.student.id, status: 'pending' }
+      ];
     }
 
     // Search filter
