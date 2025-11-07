@@ -43,12 +43,20 @@ const ProfileScreen = ({ navigation }) => {
     try {
       setLoading(true);
       const response = await getProfile();
-      setProfile(response.data.student);
+      const studentData = response.data.student;
+      
+      // Update profile state
+      setProfile(studentData);
+      
+      // IMPORTANT: Update AsyncStorage with fresh user data including role
+      await AsyncStorage.setItem('userData', JSON.stringify(studentData));
+      console.log('Profile loaded - Role:', studentData.role);
+      
       setEditData({
-        name: response.data.student.name,
-        phone: response.data.student.phone,
-        year: response.data.student.year.toString(),
-        semester: response.data.student.semester.toString(),
+        name: studentData.name,
+        phone: studentData.phone,
+        year: studentData.year.toString(),
+        semester: studentData.semester.toString(),
       });
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -170,6 +178,21 @@ const ProfileScreen = ({ navigation }) => {
               <Text style={styles.badgeText}>Year {profile?.year}</Text>
             </View>
           </View>
+          
+          {/* Admin Panel Quick Access - Prominent placement */}
+          {(profile?.role === 'admin' || profile?.role === 'cr') && (
+            <TouchableOpacity
+              style={styles.adminPanelButton}
+              onPress={() => {
+                console.log('Navigating to Admin Panel, role:', profile?.role);
+                navigation.navigate('AdminPanel');
+              }}
+            >
+              <Ionicons name="shield-checkmark" size={20} color={COLORS.WHITE} />
+              <Text style={styles.adminPanelButtonText}>Admin Panel</Text>
+              <Ionicons name="chevron-forward" size={20} color={COLORS.WHITE} />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Profile Details */}
@@ -286,20 +309,6 @@ const ProfileScreen = ({ navigation }) => {
         {/* Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Actions</Text>
-          
-          {/* Admin Panel - Only show for admins and CRs */}
-          {(profile?.role === 'admin' || profile?.role === 'cr') && (
-            <TouchableOpacity
-              style={styles.actionRow}
-              onPress={() => navigation.navigate('AdminPanel')}
-            >
-              <View style={styles.actionLeft}>
-                <Ionicons name="shield-checkmark" size={24} color={COLORS.PRIMARY} />
-                <Text style={styles.actionText}>Admin Panel</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={24} color={COLORS.TEXT_LIGHT} />
-            </TouchableOpacity>
-          )}
           
           <TouchableOpacity style={styles.actionRow} onPress={handleLogout}>
             <View style={styles.actionLeft}>
@@ -501,6 +510,23 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: TYPOGRAPHY.SIZES.MD,
     fontWeight: '600',
+  },
+  adminPanelButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.PRIMARY,
+    paddingVertical: SPACING.MD,
+    paddingHorizontal: SPACING.LG,
+    borderRadius: RADIUS.MD,
+    marginTop: SPACING.LG,
+    gap: SPACING.SM,
+    ...SHADOWS.MEDIUM,
+  },
+  adminPanelButtonText: {
+    color: COLORS.WHITE,
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    fontWeight: 'bold',
   },
   bottomSpacing: {
     height: SPACING.XL,

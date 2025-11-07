@@ -32,11 +32,15 @@ const AdminPanelScreen = ({ navigation }) => {
   const checkAdminAccess = async () => {
     try {
       const { userData } = await getAuthData();
+      console.log('Admin Panel - User Data:', userData);
+      console.log('Admin Panel - User Role:', userData?.role);
       setUserData(userData);
       
       if (userData?.role === 'admin' || userData?.role === 'cr') {
+        console.log('Admin Panel - Access Granted');
         loadPendingEvents();
       } else {
+        console.log('Admin Panel - Access Denied, Role:', userData?.role);
         setLoading(false);
       }
     } catch (error) {
