@@ -83,8 +83,6 @@ const studentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for faster queries
-studentSchema.index({ email: 1 });
-studentSchema.index({ usn: 1 });
+// Indexes are already defined with unique: true in the schema, so no need to redefine them
 
 module.exports = mongoose.model('Student', studentSchema);

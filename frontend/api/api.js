@@ -1,16 +1,76 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 /**
  * API Configuration
  * Base URL for backend API
- * Update this URL based on your backend deployment
+ * Automatically detects the correct URL based on the environment
  */
 
-// For Android Emulator, use 10.0.2.2
-// For iOS Simulator, use localhost
-// For Physical Device, use your computer's IP address (e.g., 192.168.1.x)
-const API_BASE_URL = 'http://192.168.29.217:5000/api'; // Physical device
+// ⚠️ MANUAL OVERRIDE (if auto-detection fails)
+// Uncomment and set your IP address manually:
+const MANUAL_API_URL = 'http://192.168.29.217:5000/api';
+// const MANUAL_API_URL = null;
+
+// Get the local IP address dynamically from Expo
+const getApiUrl = () => {
+  // If manual URL is set, use it
+  if (MANUAL_API_URL) {
+    console.log('🔧 Using manual API URL:', MANUAL_API_URL);
+    return MANUAL_API_URL;
+  }
+  
+  // For production, use your deployed backend URL
+  if (__DEV__) {
+    // Development mode
+    
+    // Try to get debugger host from expoConfig (new) or manifest (deprecated)
+    const expoConfig = Constants.expoConfig;
+    const manifest = Constants.manifest;
+    
+    // Get the debugger host (works for both physical devices and emulators)
+    const debuggerHost = expoConfig?.hostUri || manifest?.debuggerHost || manifest?.hostUri;
+    
+    console.log('🔍 Debugger Host:', debuggerHost);
+    console.log('🔍 Platform:', Platform.OS);
+    
+    if (debuggerHost) {
+      // Extract IP address from debuggerHost (format: "192.168.x.x:19000" or "192.168.x.x:8081")
+      const host = debuggerHost.split(':')[0];
+      
+      // Check if it's a real IP address (not localhost or emulator address)
+      if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+        console.log('✅ Using detected IP:', host);
+        return `http://${host}:5000/api`;
+      }
+    }
+    
+    // Fallback URLs for different platforms
+    if (Platform.OS === 'android') {
+      console.log('⚠️ Falling back to Android emulator address');
+      // Android emulator
+      return 'http://10.0.2.2:5000/api';
+    } else if (Platform.OS === 'ios') {
+      console.log('⚠️ Falling back to iOS simulator address');
+      // iOS simulator
+      return 'http://localhost:5000/api';
+    }
+    
+    // Default fallback
+    console.log('⚠️ Falling back to localhost');
+    return 'http://localhost:5000/api';
+  } else {
+    // Production mode - replace with your actual deployed backend URL
+    return 'https://your-backend-url.com/api';
+  }
+};
+
+const API_BASE_URL = getApiUrl();
+
+// Log the API URL for debugging
+console.log('📡 API Base URL:', API_BASE_URL);
 
 // Create axios instance
 const api = axios.create({

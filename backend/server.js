@@ -10,9 +10,6 @@ dotenv.config();
 // Initialize Express app
 const app = express();
 
-// Connect to MongoDB
-connectDB();
-
 // ==================== MIDDLEWARE ====================
 
 // Enable CORS for all routes
@@ -91,18 +88,39 @@ app.use((err, req, res, next) => {
 // ==================== START SERVER ====================
 
 const PORT = process.env.PORT || 5000;
+const HOST = '0.0.0.0'; // Listen on all network interfaces
 
-app.listen(PORT, () => {
-  console.log('🚀 ==========================================');
-  console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode`);
-  console.log(`🚀 Server started on port ${PORT}`);
-  console.log(`🚀 API URL: http://localhost:${PORT}`);
-  console.log('🚀 ==========================================');
+// Connect to MongoDB and start server
+connectDB().then(() => {
+  app.listen(PORT, HOST, () => {
+    console.log('🚀 ==========================================');
+    console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode`);
+    console.log(`🚀 Server started on port ${PORT}`);
+    console.log(`🚀 API URL: http://localhost:${PORT}`);
+    console.log(`🚀 Network URL: http://192.168.29.217:${PORT}`);
+    console.log('🚀 ==========================================');
+  });
+}).catch((error) => {
+  console.error('Failed to connect to MongoDB:', error);
+  process.exit(1);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error(`❌ Unhandled Rejection: ${err.message}`);
-  // Close server & exit process
-  process.exit(1);
+  console.error(err.stack);
+  // Don't exit in development
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error(`❌ Uncaught Exception: ${err.message}`);
+  console.error(err.stack);
+  // Don't exit in development
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
 });
