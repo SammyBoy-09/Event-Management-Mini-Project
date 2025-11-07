@@ -10,9 +10,9 @@ import Constants from 'expo-constants';
  */
 
 // ⚠️ MANUAL OVERRIDE (if auto-detection fails)
-// Uncomment and set your IP address manually:
-const MANUAL_API_URL = 'http://192.168.29.217:5000/api';
-// const MANUAL_API_URL = null;
+// For production, use your deployed backend URL:
+const MANUAL_API_URL = 'https://event-management-mini-project.onrender.com/api';
+// const MANUAL_API_URL = null; // Uncomment to use auto-detection
 
 // Get the local IP address dynamically from Expo
 const getApiUrl = () => {
