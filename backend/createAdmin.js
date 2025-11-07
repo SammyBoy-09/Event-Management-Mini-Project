@@ -7,8 +7,8 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const Student = require('./models/Student');
 
-// MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI || 'your-mongodb-connection-string';
+// MongoDB connection (using MONGO_URI from .env)
+const MONGODB_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'your-mongodb-connection-string';
 
 const createAdminUser = async () => {
   try {
