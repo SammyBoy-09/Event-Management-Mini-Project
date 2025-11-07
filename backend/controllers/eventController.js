@@ -47,7 +47,7 @@ exports.createEvent = async (req, res) => {
       isPublic,
       tags,
       createdBy: req.student.id,
-      status: 'approved' // Auto-approve all events for now
+      status: 'pending' // Events require admin approval
     });
 
     // Populate creator info

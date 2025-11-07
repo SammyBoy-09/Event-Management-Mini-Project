@@ -287,6 +287,20 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Actions</Text>
           
+          {/* Admin Panel - Only show for admins and CRs */}
+          {(profile?.role === 'admin' || profile?.role === 'cr') && (
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() => navigation.navigate('AdminPanel')}
+            >
+              <View style={styles.actionLeft}>
+                <Ionicons name="shield-checkmark" size={24} color={COLORS.PRIMARY} />
+                <Text style={styles.actionText}>Admin Panel</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color={COLORS.TEXT_LIGHT} />
+            </TouchableOpacity>
+          )}
+          
           <TouchableOpacity style={styles.actionRow} onPress={handleLogout}>
             <View style={styles.actionLeft}>
               <Ionicons name="log-out" size={24} color={COLORS.ERROR} />

@@ -13,6 +13,7 @@ import EventDetailsScreen from './screens/EventDetailsScreen';
 import CreateEventScreen from './screens/CreateEventScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import AdminPanelScreen from './screens/AdminPanelScreen';
 import LoadingSpinner from './components/LoadingSpinner';
 
 // API
@@ -145,6 +146,13 @@ export default function App() {
           <Stack.Screen 
             name="Profile" 
             component={ProfileScreen}
+            options={{ 
+              animationEnabled: true,
+            }}
+          />
+          <Stack.Screen 
+            name="AdminPanel" 
+            component={AdminPanelScreen}
             options={{ 
               animationEnabled: true,
             }}
