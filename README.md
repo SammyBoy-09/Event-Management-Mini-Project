@@ -433,12 +433,39 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 License
+## � Building Android APK
+
+Want to create an installable APK for distribution? Follow our comprehensive guide:
+
+📖 **[BUILD_APK_GUIDE.md](BUILD_APK_GUIDE.md)** - Complete APK building instructions
+
+### Quick Build Steps:
+
+```bash
+# Install EAS CLI
+npm install -g eas-cli
+
+# Navigate to frontend
+cd frontend
+
+# Login to Expo
+npx eas login
+
+# Build APK
+npx eas build -p android --profile preview
+```
+
+**Important:** Before building, deploy your backend online so the app works for all users!
+
+📖 **[DEPLOY_BACKEND.md](DEPLOY_BACKEND.md)** - Backend deployment guide
+
+## �📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👨‍💻 Authors
 
+- **SammyBoy-09** - Samuel Lazar
 - **CampusConnect Team** - Initial work
 
 ## 🙏 Acknowledgments
@@ -451,7 +478,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-For support, email campusconnect@example.com or open an issue in the repository.
+For support, open an issue in the repository or check our detailed guides:
+- [Building APK Guide](BUILD_APK_GUIDE.md)
+- [Backend Deployment Guide](DEPLOY_BACKEND.md)
+- [Backend Quick Start](backend/START_HERE.md)
 
 ---
 

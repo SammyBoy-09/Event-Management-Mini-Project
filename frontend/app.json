@@ -13,13 +13,25 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.campusconnect.app"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#6C63FF"
-      }
+      },
+      "package": "com.campusconnect.app",
+      "versionCode": 1,
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
     },
-    "web": {}
+    "web": {},
+    "extra": {
+      "eas": {
+        "projectId": "f4bbeab9-7030-40d9-83d3-8ff08a9d4173"
+      }
+    }
   }
 }
