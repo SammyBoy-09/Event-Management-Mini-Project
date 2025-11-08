@@ -94,15 +94,16 @@ exports.getAllEvents = async (req, res) => {
       query.category = category;
     }
 
-    // Status filter (admin can see all, others only approved + their own events)
-    if (req.student.role === 'admin' && status) {
-      query.status = status;
+    // Status filter with proper moderation logic
+    if (req.student.role === 'admin' || req.student.role === 'cr') {
+      // Admins and CRs can filter by status (see all events)
+      if (status) {
+        query.status = status;
+      }
+      // If no status filter, admins see all events (pending, approved, rejected)
     } else {
-      // Non-admin users see approved events + their own pending events
-      query.$or = [
-        { status: 'approved' },
-        { createdBy: req.student.id, status: 'pending' }
-      ];
+      // Regular users ONLY see approved events (strict moderation)
+      query.status = 'approved';
     }
 
     // Search filter
@@ -449,10 +450,10 @@ exports.cancelRSVP = async (req, res) => {
  */
 exports.approveEvent = async (req, res) => {
   try {
-    if (req.student.role !== 'admin') {
+    if (req.student.role !== 'admin' && req.student.role !== 'cr') {
       return res.status(403).json({
         success: false,
-        message: 'Only admins can approve events'
+        message: 'Only admins and CRs can approve events'
       });
     }
 
@@ -500,10 +501,10 @@ exports.approveEvent = async (req, res) => {
  */
 exports.rejectEvent = async (req, res) => {
   try {
-    if (req.student.role !== 'admin') {
+    if (req.student.role !== 'admin' && req.student.role !== 'cr') {
       return res.status(403).json({
         success: false,
-        message: 'Only admins can reject events'
+        message: 'Only admins and CRs can reject events'
       });
     }
 
