@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const Student = require('../models/Student');
+const Admin = require('../models/Admin');
 
 /**
  * Protect routes - Verify JWT token
@@ -17,9 +18,16 @@ const protect = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Get student from token (exclude password)
-      req.user = await Student.findById(decoded.id).select('-password');
-      req.student = req.user; // Also set req.student for consistency
+      // Check user type from token and fetch from appropriate collection
+      let user;
+      if (decoded.type === 'admin') {
+        user = await Admin.findById(decoded.id).select('-password');
+      } else {
+        user = await Student.findById(decoded.id).select('-password');
+      }
+
+      req.user = user;
+      req.student = user; // Also set req.student for consistency with existing code
 
       if (!req.user) {
         return res.status(401).json({

@@ -545,12 +545,93 @@ exports.rejectEvent = async (req, res) => {
 };
 
 /**
+ * Update event status (Admin/CR only)
+ * PUT /api/events/:id/status
+ */
+exports.updateEventStatus = async (req, res) => {
+  try {
+    if (req.student.role !== 'admin' && req.student.role !== 'cr' && req.student.role !== 'CR') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admins and CRs can update event status'
+      });
+    }
+
+    const { status } = req.body;
+
+    if (!['pending', 'approved', 'rejected'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status. Must be: pending, approved, or rejected'
+      });
+    }
+
+    const event = await Event.findById(req.params.id);
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+    }
+
+    const oldStatus = event.status;
+    event.status = status;
+
+    if (status === 'approved') {
+      event.approvedBy = req.student.id;
+      event.approvedAt = new Date();
+    }
+
+    await event.save();
+
+    // Notify event creator if status changed
+    if (oldStatus !== status) {
+      let notificationMessage = '';
+      let notificationType = '';
+
+      if (status === 'approved') {
+        notificationMessage = `Your event "${event.title}" has been approved and is now live!`;
+        notificationType = 'event_approval';
+      } else if (status === 'rejected') {
+        notificationMessage = `Your event "${event.title}" has been rejected. ${req.body.reason || ''}`;
+        notificationType = 'event_rejection';
+      } else if (status === 'pending') {
+        notificationMessage = `Your event "${event.title}" status has been changed to pending review.`;
+        notificationType = 'event_status_change';
+      }
+
+      await Notification.create({
+        recipient: event.createdBy,
+        type: notificationType,
+        title: 'Event Status Updated',
+        message: notificationMessage,
+        relatedEvent: event._id
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Event status updated to ${status}`,
+      data: event
+    });
+  } catch (error) {
+    console.error('Update event status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating event status',
+      error: error.message
+    });
+  }
+};
+
+/**
  * Mark attendance (Admin/CR only)
  * PUT /api/events/:eventId/attendance/:studentId
  */
 exports.markAttendance = async (req, res) => {
   try {
-    if (req.student.role !== 'admin' && req.student.role !== 'cr') {
+    if (req.student.role !== 'admin' && req.student.role !== 'cr' && req.student.role !== 'CR') {
       return res.status(403).json({
         success: false,
         message: 'Only admins and CRs can mark attendance'

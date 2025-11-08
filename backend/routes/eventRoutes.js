@@ -10,6 +10,7 @@ const {
   cancelRSVP,
   approveEvent,
   rejectEvent,
+  updateEventStatus,
   markAttendance
 } = require('../controllers/eventController');
 const { protect } = require('../middleware/authMiddleware');
@@ -31,6 +32,7 @@ router.delete('/:id/rsvp', cancelRSVP);
 // Admin actions
 router.put('/:id/approve', approveEvent);
 router.put('/:id/reject', rejectEvent);
+router.put('/:id/status', updateEventStatus);
 
 // Attendance
 router.put('/:eventId/attendance/:studentId', markAttendance);

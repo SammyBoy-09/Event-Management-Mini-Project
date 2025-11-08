@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme';
-import { getAllEvents, rsvpEvent, cancelRSVP } from '../api/api';
+import { getAllEvents, rsvpEvent, cancelRSVP, updateEventStatus } from '../api/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
@@ -87,11 +87,65 @@ const DashboardScreen = ({ navigation }) => {
     }
   };
 
+  const handleStatusChange = async (event) => {
+    const isAdmin = user && (user.role === 'admin' || user.role === 'cr' || user.role === 'CR');
+    if (!isAdmin) return;
+
+    const currentStatus = event.status || 'pending';
+    
+    Alert.alert(
+      'Change Event Status',
+      `Current status: ${currentStatus}\nSelect new status:`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Pending',
+          onPress: () => updateStatus(event._id, 'pending')
+        },
+        {
+          text: 'Approved',
+          onPress: () => updateStatus(event._id, 'approved')
+        },
+        {
+          text: 'Rejected',
+          onPress: () => updateStatus(event._id, 'rejected'),
+          style: 'destructive'
+        }
+      ]
+    );
+  };
+
+  const updateStatus = async (eventId, newStatus) => {
+    try {
+      await updateEventStatus(eventId, newStatus);
+      Alert.alert('Success', `Event status changed to ${newStatus}`);
+      loadEvents();
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to update status');
+    }
+  };
+
   const getFilteredEvents = () => {
     if (selectedCategory === 'All') {
       return events;
     }
     return events.filter(event => event.category === selectedCategory);
+  };
+
+  const getStatusBadgeColor = (status) => {
+    switch (status) {
+      case 'approved':
+        return { bg: '#10B98120', text: '#10B981', label: 'Approved' };
+      case 'pending':
+        return { bg: '#F59E0B20', text: '#F59E0B', label: 'Pending' };
+      case 'rejected':
+        return { bg: '#EF444420', text: '#EF4444', label: 'Rejected' };
+      default:
+        return { bg: '#6B728020', text: '#6B7280', label: 'Unknown' };
+    }
   };
 
   const getGreeting = () => {
@@ -260,11 +314,48 @@ const DashboardScreen = ({ navigation }) => {
               onPress={() => handleEventPress(event)}
             >
               <View style={styles.eventCardHeader}>
-                <View style={[styles.categoryBadge, { backgroundColor: COLORS.PRIMARY + '20' }]}>
-                  <Text style={[styles.categoryBadgeText, { color: COLORS.PRIMARY }]}>
-                    {event.category}
-                  </Text>
+                <View style={styles.badgeRow}>
+                  <View style={[styles.categoryBadge, { backgroundColor: COLORS.PRIMARY + '20' }]}>
+                    <Text style={[styles.categoryBadgeText, { color: COLORS.PRIMARY }]}>
+                      {event.category}
+                    </Text>
+                  </View>
+                  
+                  {/* Status Badge */}
+                  {user && (user.role === 'admin' || user.role === 'cr' || user.role === 'CR') ? (
+                    <TouchableOpacity
+                      style={[
+                        styles.statusBadge,
+                        { backgroundColor: getStatusBadgeColor(event.status).bg }
+                      ]}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        handleStatusChange(event);
+                      }}
+                    >
+                      <Ionicons 
+                        name={event.status === 'approved' ? 'checkmark-circle' : 
+                              event.status === 'rejected' ? 'close-circle' : 
+                              'time'} 
+                        size={14} 
+                        color={getStatusBadgeColor(event.status).text} 
+                      />
+                      <Text style={[styles.statusBadgeText, { color: getStatusBadgeColor(event.status).text }]}>
+                        {getStatusBadgeColor(event.status).label}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : event.status !== 'approved' && (
+                    <View style={[
+                      styles.statusBadge,
+                      { backgroundColor: getStatusBadgeColor(event.status).bg }
+                    ]}>
+                      <Text style={[styles.statusBadgeText, { color: getStatusBadgeColor(event.status).text }]}>
+                        {getStatusBadgeColor(event.status).label}
+                      </Text>
+                    </View>
+                  )}
                 </View>
+
                 {event.hasRSVP && (
                   <View style={styles.rsvpBadge}>
                     <Ionicons name="checkmark-circle" size={16} color={COLORS.SUCCESS} />
@@ -474,12 +565,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.SM,
   },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.XS,
+    flex: 1,
+  },
   categoryBadge: {
     paddingHorizontal: SPACING.SM,
     paddingVertical: 4,
     borderRadius: RADIUS.SM,
   },
   categoryBadgeText: {
+    fontSize: TYPOGRAPHY.SIZES.XS,
+    fontWeight: '600',
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.SM,
+    paddingVertical: 4,
+    borderRadius: RADIUS.SM,
+    gap: 4,
+  },
+  statusBadgeText: {
     fontSize: TYPOGRAPHY.SIZES.XS,
     fontWeight: '600',
   },
