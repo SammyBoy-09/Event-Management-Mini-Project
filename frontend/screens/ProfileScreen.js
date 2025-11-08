@@ -147,13 +147,21 @@ const ProfileScreen = ({ navigation }) => {
           <Ionicons name="arrow-back" size={24} color={COLORS.TEXT_DARK} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity onPress={() => setEditMode(!editMode)}>
-          <Ionicons
-            name={editMode ? 'close' : 'create'}
-            size={24}
-            color={editMode ? COLORS.ERROR : COLORS.PRIMARY}
-          />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Settings')}
+            style={styles.headerButton}
+          >
+            <Ionicons name="settings-outline" size={24} color={COLORS.PRIMARY} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setEditMode(!editMode)}>
+            <Ionicons
+              name={editMode ? 'close' : 'create'}
+              size={24}
+              color={editMode ? COLORS.ERROR : COLORS.PRIMARY}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -360,6 +368,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.WHITE,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.BORDER,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.MD,
+  },
+  headerButton: {
+    padding: SPACING.XS,
   },
   headerTitle: {
     fontSize: TYPOGRAPHY.SIZES.LG,

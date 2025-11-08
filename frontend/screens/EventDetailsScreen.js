@@ -14,12 +14,14 @@ import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme
 import { getEventById, rsvpEvent, cancelRSVP, deleteEvent } from '../api/api';
 import Button from '../components/Button';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import QRTicketModal from '../components/QRTicketModal';
 
 const EventDetailsScreen = ({ route, navigation }) => {
   const { eventId } = route.params;
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [showQRTicket, setShowQRTicket] = useState(false);
 
   useEffect(() => {
     loadUser();
@@ -56,11 +58,28 @@ const EventDetailsScreen = ({ route, navigation }) => {
       if (event.hasRSVP) {
         await cancelRSVP(eventId);
         Alert.alert('Success', 'RSVP cancelled successfully!');
+        loadEventDetails();
       } else {
         await rsvpEvent(eventId);
-        Alert.alert('Success', 'RSVP confirmed successfully!');
+        Alert.alert(
+          '✅ RSVP Confirmed!', 
+          'Your event ticket is ready. Would you like to view it now?',
+          [
+            {
+              text: 'View Ticket',
+              onPress: () => {
+                loadEventDetails();
+                setTimeout(() => setShowQRTicket(true), 500);
+              },
+            },
+            {
+              text: 'Later',
+              onPress: () => loadEventDetails(),
+              style: 'cancel',
+            },
+          ]
+        );
       }
-      loadEventDetails();
     } catch (error) {
       Alert.alert('Error', error.message || 'Failed to process RSVP');
     }
@@ -251,13 +270,39 @@ const EventDetailsScreen = ({ route, navigation }) => {
       
       {/* Footer Actions */}
       <View style={styles.footer}>
-        <Button
-          title={event.hasRSVP ? 'Cancel RSVP' : 'RSVP Now'}
-          onPress={handleRSVP}
-          variant={event.hasRSVP ? 'outline' : 'primary'}
-          disabled={!event.hasRSVP && event.currentAttendees >= event.maxAttendees}
-        />
+        {event.hasRSVP ? (
+          <View style={styles.footerButtons}>
+            <Button
+              title="View QR Ticket"
+              onPress={() => setShowQRTicket(true)}
+              variant="primary"
+              style={styles.footerButton}
+              icon="qr-code"
+            />
+            <Button
+              title="Cancel RSVP"
+              onPress={handleRSVP}
+              variant="outline"
+              style={styles.footerButton}
+            />
+          </View>
+        ) : (
+          <Button
+            title="RSVP Now"
+            onPress={handleRSVP}
+            variant="primary"
+            disabled={event.currentAttendees >= event.maxAttendees}
+          />
+        )}
       </View>
+
+      {/* QR Ticket Modal */}
+      <QRTicketModal
+        visible={showQRTicket}
+        onClose={() => setShowQRTicket(false)}
+        event={event}
+        userData={user}
+      />
     </View>
   );
 };
@@ -460,6 +505,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.BORDER,
     ...SHADOWS.LARGE,
+  },
+  footerButtons: {
+    flexDirection: 'row',
+    gap: SPACING.SM,
+  },
+  footerButton: {
+    flex: 1,
   },
 });
 

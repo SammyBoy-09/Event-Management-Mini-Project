@@ -166,20 +166,23 @@ const DashboardScreen = ({ navigation }) => {
             <Text style={styles.actionButtonText}>Create Event</Text>
           </TouchableOpacity>
 
+          {/* Admin Panel - Only for Admins and CRs */}
+          {user && (user.role === 'admin' || user.role === 'cr') && (
+            <TouchableOpacity 
+              style={[styles.actionButton, { backgroundColor: '#FF658420' }]}
+              onPress={() => navigation.navigate('AdminPanel')}
+            >
+              <Ionicons name="shield-checkmark" size={32} color="#FF6584" />
+              <Text style={styles.actionButtonText}>Admin Panel</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity 
             style={[styles.actionButton, { backgroundColor: COLORS.SECONDARY + '20' }]}
             onPress={() => navigation.navigate('Profile')}
           >
             <Ionicons name="calendar" size={32} color={COLORS.SECONDARY} />
             <Text style={styles.actionButtonText}>My Events</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: COLORS.TERTIARY + '20' }]}
-            onPress={handleLogout}
-          >
-            <Ionicons name="log-out" size={32} color={COLORS.TERTIARY} />
-            <Text style={styles.actionButtonText}>Logout</Text>
           </TouchableOpacity>
         </View>
       </View>

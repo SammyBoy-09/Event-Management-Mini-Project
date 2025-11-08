@@ -329,6 +329,40 @@ export const deleteAllNotifications = async () => {
 };
 
 /**
+ * Admin API Methods
+ */
+
+// Register new admin
+export const registerAdmin = async (adminData) => {
+  try {
+    const response = await api.post('/auth/admin/register', adminData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Admin registration failed' };
+  }
+};
+
+// Login admin
+export const loginAdmin = async (credentials) => {
+  try {
+    const response = await api.post('/auth/admin/login', credentials);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Admin login failed' };
+  }
+};
+
+// Get admin profile
+export const getAdminProfile = async () => {
+  try {
+    const response = await api.get('/auth/admin/profile');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Failed to fetch admin profile' };
+  }
+};
+
+/**
  * Storage Helper Functions
  */
 

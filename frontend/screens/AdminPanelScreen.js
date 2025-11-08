@@ -272,6 +272,21 @@ const AdminPanelScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
+      {/* QR Scanner Section - Admin Only */}
+      <View style={styles.scannerSection}>
+        <TouchableOpacity 
+          style={styles.scannerButton} 
+          onPress={() => navigation.navigate('QRScanner')}
+        >
+          <Ionicons name="qr-code-outline" size={40} color="#FFF" />
+          <View style={styles.scannerTextContainer}>
+            <Text style={styles.scannerButtonText}>Scan QR Ticket</Text>
+            <Text style={styles.scannerButtonSubtext}>Check-in attendees for events</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={24} color="#FFF" />
+        </TouchableOpacity>
+      </View>
+
       {/* Stats Header */}
       <View style={styles.statsHeader}>
         <View style={styles.statCard}>
@@ -461,6 +476,39 @@ const styles = StyleSheet.create({
     color: '#6C63FF',
     fontSize: 13,
     fontWeight: '600',
+  },
+  // QR Scanner Section Styles
+  scannerSection: {
+    padding: 16,
+    backgroundColor: '#F7FAFC',
+  },
+  scannerButton: {
+    backgroundColor: '#6C5CE7',
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  scannerTextContainer: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  scannerButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginBottom: 4,
+  },
+  scannerButtonSubtext: {
+    fontSize: 13,
+    color: '#FFF',
+    opacity: 0.9,
   },
   approveButton: {
     backgroundColor: '#4ECDC4',
