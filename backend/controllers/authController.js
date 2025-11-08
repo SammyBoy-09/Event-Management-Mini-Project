@@ -80,7 +80,8 @@ exports.registerStudent = async (req, res) => {
           semester: student.semester,
           phone: student.phone,
           gender: student.gender,
-          department: student.department
+          department: student.department,
+          role: student.role
         }
       }
     });
@@ -149,7 +150,8 @@ exports.loginStudent = async (req, res) => {
           semester: student.semester,
           phone: student.phone,
           gender: student.gender,
-          department: student.department
+          department: student.department,
+          role: student.role
         }
       }
     });
