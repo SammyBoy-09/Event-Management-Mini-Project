@@ -28,7 +28,15 @@ const QRTicketModal = ({
 }) => {
   const qrRef = useRef();
 
-  if (!event || !userData) return null;
+  // Debug logging
+  console.log('QRTicketModal - visible:', visible);
+  console.log('QRTicketModal - event:', event ? 'exists' : 'null');
+  console.log('QRTicketModal - userData:', userData ? 'exists' : 'null');
+
+  if (!event || !userData) {
+    console.log('QRTicketModal - returning null, missing data');
+    return null;
+  }
 
   // Generate QR code data
   const qrData = JSON.stringify({
@@ -41,6 +49,8 @@ const QRTicketModal = ({
     rsvpDate: new Date().toISOString(),
     ticketId: `${event._id || event.id}-${userData._id || userData.id}-${Date.now()}`,
   });
+
+  console.log('QRTicketModal - QR Data generated:', qrData.substring(0, 100));
 
   const handleShareTicket = async () => {
     try {
@@ -110,7 +120,7 @@ const QRTicketModal = ({
             <View style={styles.ticketContainer} ref={qrRef} collapsable={false}>
               {/* Ticket Header */}
               <View style={styles.ticketHeader}>
-                <Ionicons name="ticket" size={32} color={COLORS.primary} />
+                <Ionicons name="ticket-outline" size={32} color={COLORS.primary} />
                 <Text style={styles.ticketBrand}>CampusConnect</Text>
               </View>
 
@@ -141,12 +151,27 @@ const QRTicketModal = ({
 
               {/* QR Code */}
               <View style={styles.qrContainer}>
-                <QRCode
-                  value={qrData}
-                  size={220}
-                  backgroundColor="white"
-                  color={COLORS.primary}
-                />
+                {(() => {
+                  try {
+                    return (
+                      <QRCode
+                        value={qrData}
+                        size={220}
+                        backgroundColor="white"
+                        color={COLORS.primary || '#6C63FF'}
+                      />
+                    );
+                  } catch (error) {
+                    console.error('QR Code rendering error:', error);
+                    return (
+                      <View style={styles.errorContainer}>
+                        <Ionicons name="alert-circle" size={48} color="#EF4444" />
+                        <Text style={styles.errorText}>Unable to generate QR code</Text>
+                        <Text style={styles.errorSubtext}>{error.message}</Text>
+                      </View>
+                    );
+                  }
+                })()}
               </View>
 
               {/* Instructions */}
@@ -364,6 +389,26 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginLeft: 10,
     lineHeight: 18,
+  },
+  errorContainer: {
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 12,
+    marginVertical: 10,
+  },
+  errorText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#EF4444',
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  errorSubtext: {
+    fontSize: 13,
+    color: '#991B1B',
+    marginTop: 6,
+    textAlign: 'center',
   },
 });
 

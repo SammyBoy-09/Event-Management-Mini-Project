@@ -1,3 +1,12 @@
+// Polyfill for TextEncoder (required for QR code generation on React Native)
+import { TextEncoder, TextDecoder } from 'text-encoding';
+if (typeof global.TextEncoder === 'undefined') {
+  global.TextEncoder = TextEncoder;
+}
+if (typeof global.TextDecoder === 'undefined') {
+  global.TextDecoder = TextDecoder;
+}
+
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
