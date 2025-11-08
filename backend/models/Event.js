@@ -70,6 +70,15 @@ const eventSchema = new mongoose.Schema({
     attended: {
       type: Boolean,
       default: false
+    },
+    attendedAt: {
+      type: Date,
+      default: null
+    },
+    checkInMethod: {
+      type: String,
+      enum: ['qr-scan', 'manual'],
+      default: null
     }
   }],
   rsvpRequired: {

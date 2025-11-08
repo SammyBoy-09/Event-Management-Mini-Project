@@ -659,13 +659,28 @@ exports.markAttendance = async (req, res) => {
       });
     }
 
-    // Toggle attendance
-    attendee.attended = req.body.attended !== undefined ? req.body.attended : !attendee.attended;
+    // Toggle or set attendance
+    const newAttendedStatus = req.body.attended !== undefined ? req.body.attended : !attendee.attended;
+    attendee.attended = newAttendedStatus;
+    
+    // Set timestamp and method if marking as attended
+    if (newAttendedStatus) {
+      attendee.attendedAt = new Date();
+      attendee.checkInMethod = req.body.checkInMethod || 'manual';
+    } else {
+      // Clear timestamp if unmarking
+      attendee.attendedAt = null;
+      attendee.checkInMethod = null;
+    }
+    
     await event.save();
+
+    // Populate student details for response
+    await event.populate('attendees.student', 'name email usn');
 
     res.status(200).json({
       success: true,
-      message: 'Attendance marked successfully',
+      message: `Attendance ${newAttendedStatus ? 'marked' : 'unmarked'} successfully`,
       data: event
     });
   } catch (error) {
@@ -673,6 +688,70 @@ exports.markAttendance = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error marking attendance',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get event attendees with attendance details
+ * GET /api/events/:eventId/attendees
+ */
+exports.getEventAttendees = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.eventId)
+      .populate('attendees.student', 'name email usn phone department')
+      .populate('createdBy', 'name email');
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+    }
+
+    // Check if user has permission to view attendees
+    const isCreator = event.createdBy._id.toString() === req.student.id;
+    const isAdmin = req.student.role === 'admin' || req.student.role === 'cr' || req.student.role === 'CR';
+    
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to view attendees'
+      });
+    }
+
+    // Calculate attendance statistics
+    const totalRSVPs = event.attendees.length;
+    const attendedCount = event.attendees.filter(a => a.attended).length;
+    const pendingCount = totalRSVPs - attendedCount;
+    const attendanceRate = totalRSVPs > 0 ? ((attendedCount / totalRSVPs) * 100).toFixed(1) : 0;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        event: {
+          id: event._id,
+          title: event.title,
+          date: event.date,
+          time: event.time,
+          location: event.location,
+          status: event.status
+        },
+        attendees: event.attendees,
+        statistics: {
+          totalRSVPs,
+          attendedCount,
+          pendingCount,
+          attendanceRate: parseFloat(attendanceRate)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get attendees error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching attendees',
       error: error.message
     });
   }

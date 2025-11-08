@@ -6,11 +6,13 @@ import {
   Alert,
   Dimensions,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import Button from '../components/Button';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../constants/theme';
+import { markAttendance } from '../api/api';
 
 const { width } = Dimensions.get('window');
 
@@ -18,6 +20,9 @@ const QRScannerScreen = ({ navigation, route }) => {
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [flashMode, setFlashMode] = useState(false);
+  
+  // Get params from attendance screen
+  const { eventId: scanEventId, eventTitle: scanEventTitle, fromAttendance } = route.params || {};
 
   useEffect(() => {
     getBarCodeScannerPermissions();
@@ -33,30 +38,69 @@ const QRScannerScreen = ({ navigation, route }) => {
     }
   };
 
-  const handleBarCodeScanned = ({ type, data }) => {
+  const handleBarCodeScanned = async ({ type, data }) => {
     setScanned(true);
     
     try {
       // Try to parse QR code data
       const qrData = JSON.parse(data);
       
-      if (qrData.type === 'event_ticket' && qrData.eventId) {
-        Alert.alert(
-          '✅ Event Ticket',
-          `Event: ${qrData.eventTitle || 'Event'}\nAttendee: ${qrData.attendeeName || 'Unknown'}\n\nThis is a valid CampusConnect event ticket!`,
-          [
-            {
-              text: 'View Event',
-              onPress: () => {
-                navigation.replace('EventDetails', { eventId: qrData.eventId });
+      if (qrData.type === 'event_ticket' && qrData.eventId && qrData.attendeeId) {
+        // If scanning from attendance screen, mark attendance
+        if (fromAttendance && scanEventId) {
+          // Verify the ticket is for the correct event
+          if (qrData.eventId !== scanEventId) {
+            Alert.alert(
+              '❌ Wrong Event',
+              `This ticket is for "${qrData.eventTitle}" but you're checking attendance for "${scanEventTitle}".`,
+              [{ text: 'OK', onPress: () => setScanned(false) }]
+            );
+            return;
+          }
+
+          // Mark attendance
+          try {
+            await markAttendance(qrData.eventId, qrData.attendeeId, true, 'qr-scan');
+            Alert.alert(
+              '✅ Attendance Marked',
+              `${qrData.attendeeName} has been marked present for ${qrData.eventTitle}`,
+              [
+                {
+                  text: 'Scan Next',
+                  onPress: () => setScanned(false),
+                },
+                {
+                  text: 'Back to List',
+                  onPress: () => navigation.goBack(),
+                },
+              ]
+            );
+          } catch (error) {
+            Alert.alert(
+              'Error',
+              error.message || 'Failed to mark attendance',
+              [{ text: 'OK', onPress: () => setScanned(false) }]
+            );
+          }
+        } else {
+          // Just viewing ticket
+          Alert.alert(
+            '✅ Event Ticket',
+            `Event: ${qrData.eventTitle || 'Event'}\nAttendee: ${qrData.attendeeName || 'Unknown'}\n\nThis is a valid CampusConnect event ticket!`,
+            [
+              {
+                text: 'View Event',
+                onPress: () => {
+                  navigation.replace('EventDetails', { eventId: qrData.eventId });
+                },
               },
-            },
-            {
-              text: 'Scan Again',
-              onPress: () => setScanned(false),
-            },
-          ]
-        );
+              {
+                text: 'Scan Again',
+                onPress: () => setScanned(false),
+              },
+            ]
+          );
+        }
       } else if (qrData.type === 'event_checkin' && qrData.eventId) {
         Alert.alert(
           '✅ Check-in Successful',

@@ -275,12 +275,25 @@ export const updateEventStatus = async (eventId, status, reason = '') => {
 };
 
 // Mark attendance
-export const markAttendance = async (eventId, studentId, attended) => {
+export const markAttendance = async (eventId, studentId, attended, checkInMethod = 'manual') => {
   try {
-    const response = await api.put(`/events/${eventId}/attendance/${studentId}`, { attended });
+    const response = await api.put(`/events/${eventId}/attendance/${studentId}`, { 
+      attended,
+      checkInMethod 
+    });
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Failed to mark attendance' };
+  }
+};
+
+// Get event attendees
+export const getEventAttendees = async (eventId) => {
+  try {
+    const response = await api.get(`/events/${eventId}/attendees`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Failed to fetch attendees' };
   }
 };
 

@@ -270,6 +270,24 @@ const EventDetailsScreen = ({ route, navigation }) => {
       
       {/* Footer Actions */}
       <View style={styles.footer}>
+        {/* Admin/Creator Actions */}
+        {canEdit && event.currentAttendees > 0 && (
+          <TouchableOpacity 
+            style={styles.viewAttendeesButton}
+            onPress={() => navigation.navigate('Attendance', { 
+              eventId: event._id,
+              eventTitle: event.title 
+            })}
+          >
+            <Ionicons name="list-outline" size={20} color={COLORS.primary} />
+            <Text style={styles.viewAttendeesText}>
+              View Attendees ({event.currentAttendees})
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color={COLORS.primary} />
+          </TouchableOpacity>
+        )}
+
+        {/* Student RSVP Actions */}
         {event.hasRSVP ? (
           <View style={styles.footerButtons}>
             <Button
@@ -287,12 +305,14 @@ const EventDetailsScreen = ({ route, navigation }) => {
             />
           </View>
         ) : (
-          <Button
-            title="RSVP Now"
-            onPress={handleRSVP}
-            variant="primary"
-            disabled={event.currentAttendees >= event.maxAttendees}
-          />
+          !canEdit && (
+            <Button
+              title="RSVP Now"
+              onPress={handleRSVP}
+              variant="primary"
+              disabled={event.currentAttendees >= event.maxAttendees}
+            />
+          )
         )}
       </View>
 
@@ -505,6 +525,23 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.BORDER,
     ...SHADOWS.LARGE,
+  },
+  viewAttendeesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.primary + '10',
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    marginBottom: SPACING.md,
+    ...SHADOWS.small,
+  },
+  viewAttendeesText: {
+    flex: 1,
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    color: COLORS.primary,
+    fontWeight: '600',
+    marginLeft: SPACING.sm,
   },
   footerButtons: {
     flexDirection: 'row',

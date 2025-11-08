@@ -11,7 +11,8 @@ const {
   approveEvent,
   rejectEvent,
   updateEventStatus,
-  markAttendance
+  markAttendance,
+  getEventAttendees
 } = require('../controllers/eventController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -35,6 +36,7 @@ router.put('/:id/reject', rejectEvent);
 router.put('/:id/status', updateEventStatus);
 
 // Attendance
+router.get('/:eventId/attendees', getEventAttendees);
 router.put('/:eventId/attendance/:studentId', markAttendance);
 
 module.exports = router;

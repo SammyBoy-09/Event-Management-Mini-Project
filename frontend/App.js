@@ -20,6 +20,7 @@ import NotificationsScreen from './screens/NotificationsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import AdminPanelScreen from './screens/AdminPanelScreen';
 import QRScannerScreen from './screens/QRScannerScreen';
+import AttendanceScreen from './screens/AttendanceScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import LoadingSpinner from './components/LoadingSpinner';
 
@@ -261,6 +262,15 @@ export default function App() {
             name="QRScanner" 
             component={QRScannerScreen}
             options={{ 
+              title: 'Scan QR Code',
+              animationEnabled: true,
+            }}
+          />
+          <Stack.Screen 
+            name="Attendance" 
+            component={AttendanceScreen}
+            options={{ 
+              title: 'Attendance Management',
               animationEnabled: true,
             }}
           />
