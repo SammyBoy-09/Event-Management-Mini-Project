@@ -253,49 +253,93 @@ exports.getProfile = async (req, res) => {
 
 /**
  * @route   PUT /api/auth/profile
- * @desc    Update student profile
+ * @desc    Update user profile (student or admin)
  * @access  Private
  */
 exports.updateProfile = async (req, res) => {
   try {
-    const student = await Student.findById(req.user.id);
+    // Check if user is admin based on role
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'cr' || req.user.role === 'CR';
+    
+    if (isAdmin) {
+      // Update admin profile
+      const admin = await Admin.findById(req.user.id);
 
-    if (!student) {
-      return res.status(404).json({
-        success: false,
-        message: 'Student not found'
+      if (!admin) {
+        return res.status(404).json({
+          success: false,
+          message: 'Admin not found'
+        });
+      }
+
+      // Fields that can be updated for admin
+      const allowedUpdates = ['name', 'phone'];
+      
+      allowedUpdates.forEach(field => {
+        if (req.body[field]) {
+          admin[field] = req.body[field];
+        }
+      });
+
+      await admin.save();
+
+      return res.status(200).json({
+        success: true,
+        message: 'Admin profile updated successfully',
+        data: {
+          student: { // Keep 'student' key for frontend compatibility
+            id: admin._id,
+            name: admin.name,
+            email: admin.email,
+            phone: admin.phone,
+            department: admin.department,
+            role: admin.role,
+            isAdmin: true
+          }
+        }
+      });
+    } else {
+      // Update student profile
+      const student = await Student.findById(req.user.id);
+
+      if (!student) {
+        return res.status(404).json({
+          success: false,
+          message: 'Student not found'
+        });
+      }
+
+      // Fields that can be updated for student
+      const allowedUpdates = ['name', 'phone', 'year', 'semester'];
+      
+      allowedUpdates.forEach(field => {
+        if (req.body[field]) {
+          student[field] = req.body[field];
+        }
+      });
+
+      await student.save();
+
+      return res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully',
+        data: {
+          student: {
+            id: student._id,
+            name: student.name,
+            usn: student.usn,
+            email: student.email,
+            year: student.year,
+            semester: student.semester,
+            phone: student.phone,
+            gender: student.gender,
+            department: student.department,
+            role: student.role,
+            isAdmin: false
+          }
+        }
       });
     }
-
-    // Fields that can be updated
-    const allowedUpdates = ['name', 'phone', 'year', 'semester'];
-    
-    allowedUpdates.forEach(field => {
-      if (req.body[field]) {
-        student[field] = req.body[field];
-      }
-    });
-
-    await student.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Profile updated successfully',
-      data: {
-        student: {
-          id: student._id,
-          name: student.name,
-          usn: student.usn,
-          email: student.email,
-          year: student.year,
-          semester: student.semester,
-          phone: student.phone,
-          gender: student.gender,
-          department: student.department,
-          role: student.role
-        }
-      }
-    });
 
   } catch (error) {
     console.error('Update profile error:', error);
@@ -309,7 +353,7 @@ exports.updateProfile = async (req, res) => {
 
 /**
  * @route   PUT /api/auth/change-password
- * @desc    Change password
+ * @desc    Change password (student or admin)
  * @access  Private
  */
 exports.changePassword = async (req, res) => {
@@ -323,17 +367,25 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    const student = await Student.findById(req.user.id);
+    // Check if user is admin
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'cr' || req.user.role === 'CR';
+    
+    let user;
+    if (isAdmin) {
+      user = await Admin.findById(req.user.id);
+    } else {
+      user = await Student.findById(req.user.id);
+    }
 
-    if (!student) {
+    if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'Student not found'
+        message: 'User not found'
       });
     }
 
     // Check current password
-    const isPasswordValid = await bcrypt.compare(currentPassword, student.password);
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
 
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -344,8 +396,8 @@ exports.changePassword = async (req, res) => {
 
     // Hash new password
     const salt = await bcrypt.genSalt(10);
-    student.password = await bcrypt.hash(newPassword, salt);
-    await student.save();
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
 
     res.status(200).json({
       success: true,
