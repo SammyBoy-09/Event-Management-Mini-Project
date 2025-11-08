@@ -168,42 +168,78 @@ exports.loginStudent = async (req, res) => {
 
 /**
  * @route   GET /api/auth/profile
- * @desc    Get student profile
+ * @desc    Get user profile (student or admin)
  * @access  Private (requires JWT token)
  */
 exports.getProfile = async (req, res) => {
   try {
-    // req.user is set by the auth middleware
-    const student = await Student.findById(req.user.id)
-      .select('-password')
-      .populate('registeredEvents', 'title date time location category');
+    // Check if user is admin based on role
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'cr' || req.user.role === 'CR';
+    
+    if (isAdmin) {
+      // Return admin profile
+      const admin = await Admin.findById(req.user.id)
+        .select('-password')
+        .populate('approvedEvents', 'title date time location category');
 
-    if (!student) {
-      return res.status(404).json({
-        success: false,
-        message: 'Student not found'
+      if (!admin) {
+        return res.status(404).json({
+          success: false,
+          message: 'Admin not found'
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          student: { // Keep 'student' key for frontend compatibility
+            id: admin._id,
+            name: admin.name,
+            email: admin.email,
+            phone: admin.phone,
+            department: admin.department,
+            role: admin.role,
+            permissions: admin.permissions,
+            approvedEvents: admin.approvedEvents,
+            createdAt: admin.createdAt,
+            isAdmin: true
+          }
+        }
+      });
+    } else {
+      // Return student profile
+      const student = await Student.findById(req.user.id)
+        .select('-password')
+        .populate('registeredEvents', 'title date time location category');
+
+      if (!student) {
+        return res.status(404).json({
+          success: false,
+          message: 'Student not found'
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          student: {
+            id: student._id,
+            name: student.name,
+            usn: student.usn,
+            email: student.email,
+            year: student.year,
+            semester: student.semester,
+            phone: student.phone,
+            gender: student.gender,
+            department: student.department,
+            role: student.role,
+            registeredEvents: student.registeredEvents,
+            createdAt: student.createdAt,
+            isAdmin: false
+          }
+        }
       });
     }
-
-    res.status(200).json({
-      success: true,
-      data: {
-        student: {
-          id: student._id,
-          name: student.name,
-          usn: student.usn,
-          email: student.email,
-          year: student.year,
-          semester: student.semester,
-          phone: student.phone,
-          gender: student.gender,
-          department: student.department,
-          role: student.role,
-          registeredEvents: student.registeredEvents,
-          createdAt: student.createdAt
-        }
-      }
-    });
 
   } catch (error) {
     console.error('Get profile error:', error);

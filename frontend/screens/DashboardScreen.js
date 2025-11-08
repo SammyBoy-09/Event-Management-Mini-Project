@@ -221,7 +221,7 @@ const DashboardScreen = ({ navigation }) => {
           </TouchableOpacity>
 
           {/* Admin Panel - Only for Admins and CRs */}
-          {user && (user.role === 'admin' || user.role === 'cr') && (
+          {user && (user.role === 'admin' || user.role === 'cr' || user.role === 'CR') && (
             <TouchableOpacity 
               style={[styles.actionButton, { backgroundColor: '#FF658420' }]}
               onPress={() => navigation.navigate('AdminPanel')}
@@ -231,13 +231,16 @@ const DashboardScreen = ({ navigation }) => {
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: COLORS.SECONDARY + '20' }]}
-            onPress={() => navigation.navigate('Profile')}
-          >
-            <Ionicons name="calendar" size={32} color={COLORS.SECONDARY} />
-            <Text style={styles.actionButtonText}>My Events</Text>
-          </TouchableOpacity>
+          {/* My Events - Only for Students */}
+          {user && user.role === 'student' && (
+            <TouchableOpacity 
+              style={[styles.actionButton, { backgroundColor: COLORS.SECONDARY + '20' }]}
+              onPress={() => navigation.navigate('Profile')}
+            >
+              <Ionicons name="calendar" size={32} color={COLORS.SECONDARY} />
+              <Text style={styles.actionButtonText}>My Events</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 

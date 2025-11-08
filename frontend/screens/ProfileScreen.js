@@ -50,13 +50,13 @@ const ProfileScreen = ({ navigation }) => {
       
       // IMPORTANT: Update AsyncStorage with fresh user data including role
       await AsyncStorage.setItem('userData', JSON.stringify(studentData));
-      console.log('Profile loaded - Role:', studentData.role);
+      console.log('Profile loaded - Role:', studentData.role, 'IsAdmin:', studentData.isAdmin);
       
       setEditData({
         name: studentData.name,
         phone: studentData.phone,
-        year: studentData.year.toString(),
-        semester: studentData.semester.toString(),
+        year: studentData.year ? studentData.year.toString() : '',
+        semester: studentData.semester ? studentData.semester.toString() : '',
       });
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -74,12 +74,18 @@ const ProfileScreen = ({ navigation }) => {
 
   const handleUpdateProfile = async () => {
     try {
-      await updateProfile({
+      const updateData = {
         name: editData.name,
         phone: editData.phone,
-        year: parseInt(editData.year),
-        semester: parseInt(editData.semester),
-      });
+      };
+      
+      // Only include year and semester for students
+      if (!profile?.isAdmin) {
+        updateData.year = parseInt(editData.year);
+        updateData.semester = parseInt(editData.semester);
+      }
+      
+      await updateProfile(updateData);
       
       Alert.alert('Success', 'Profile updated successfully');
       setEditMode(false);
@@ -182,9 +188,18 @@ const ProfileScreen = ({ navigation }) => {
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{profile?.department}</Text>
             </View>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>Year {profile?.year}</Text>
-            </View>
+            {profile?.year && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>Year {profile?.year}</Text>
+              </View>
+            )}
+            {profile?.isAdmin && (
+              <View style={[styles.badge, { backgroundColor: COLORS.primary + '20' }]}>
+                <Text style={[styles.badgeText, { color: COLORS.primary }]}>
+                  {profile.role === 'admin' ? 'Administrator' : 'Class Representative'}
+                </Text>
+              </View>
+            )}
           </View>
           
           {/* Admin Panel Quick Access - Prominent placement */}
@@ -224,30 +239,34 @@ const ProfileScreen = ({ navigation }) => {
                 keyboardType="phone-pad"
               />
               
-              <InputField
-                label="Year"
-                value={editData.year}
-                onChangeText={(text) => setEditData({ ...editData, year: text })}
-                icon="school"
-                keyboardType="numeric"
-              />
-              
-              <InputField
-                label="Semester"
-                value={editData.semester}
-                onChangeText={(text) => setEditData({ ...editData, semester: text })}
-                icon="calendar"
-                keyboardType="numeric"
-              />
+              {!profile?.isAdmin && (
+                <>
+                  <InputField
+                    label="Year"
+                    value={editData.year}
+                    onChangeText={(text) => setEditData({ ...editData, year: text })}
+                    icon="school"
+                    keyboardType="numeric"
+                  />
+                  
+                  <InputField
+                    label="Semester"
+                    value={editData.semester}
+                    onChangeText={(text) => setEditData({ ...editData, semester: text })}
+                    icon="calendar"
+                    keyboardType="numeric"
+                  />
+                </>
+              )}
               
               <Button title="Save Changes" onPress={handleUpdateProfile} style={styles.button} />
             </>
           ) : (
             <>
               <InfoRow icon="mail" label="Email" value={profile?.email} />
-              <InfoRow icon="card" label="USN" value={profile?.usn} />
+              {profile?.usn && <InfoRow icon="card" label="USN" value={profile?.usn} />}
               <InfoRow icon="call" label="Phone" value={profile?.phone} />
-              <InfoRow icon="school" label="Year" value={`Year ${profile?.year}`} />
+              {profile?.year && <InfoRow icon="school" label="Year" value={`Year ${profile?.year}`} />}
               <InfoRow icon="calendar" label="Semester" value={`Semester ${profile?.semester}`} />
               <InfoRow icon="briefcase" label="Department" value={profile?.department} />
               <InfoRow icon="transgender" label="Gender" value={profile?.gender} />
