@@ -95,7 +95,7 @@ exports.getAllEvents = async (req, res) => {
     }
 
     // Status filter with proper moderation logic
-    if (req.student.role === 'admin' || req.student.role === 'cr') {
+    if (req.student.role === 'admin' || req.student.role === 'cr' || req.student.role === 'CR') {
       // Admins and CRs can filter by status (see all events)
       if (status) {
         query.status = status;
@@ -218,7 +218,7 @@ exports.updateEvent = async (req, res) => {
     }
 
     // Check permissions (creator or admin)
-    if (event.createdBy.toString() !== req.student.id && req.student.role !== 'admin') {
+    if (event.createdBy.toString() !== req.student.id && req.student.role !== 'admin' && req.student.role !== 'cr' && req.student.role !== 'CR') {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this event'
@@ -283,7 +283,7 @@ exports.deleteEvent = async (req, res) => {
     }
 
     // Check permissions (creator or admin)
-    if (event.createdBy.toString() !== req.student.id && req.student.role !== 'admin') {
+    if (event.createdBy.toString() !== req.student.id && req.student.role !== 'admin' && req.student.role !== 'cr' && req.student.role !== 'CR') {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this event'
@@ -450,7 +450,7 @@ exports.cancelRSVP = async (req, res) => {
  */
 exports.approveEvent = async (req, res) => {
   try {
-    if (req.student.role !== 'admin' && req.student.role !== 'cr') {
+    if (req.student.role !== 'admin' && req.student.role !== 'cr' && req.student.role !== 'CR') {
       return res.status(403).json({
         success: false,
         message: 'Only admins and CRs can approve events'
@@ -501,7 +501,7 @@ exports.approveEvent = async (req, res) => {
  */
 exports.rejectEvent = async (req, res) => {
   try {
-    if (req.student.role !== 'admin' && req.student.role !== 'cr') {
+    if (req.student.role !== 'admin' && req.student.role !== 'cr' && req.student.role !== 'CR') {
       return res.status(403).json({
         success: false,
         message: 'Only admins and CRs can reject events'
