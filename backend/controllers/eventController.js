@@ -711,7 +711,7 @@ exports.getEventAttendees = async (req, res) => {
     }
 
     // Check if user has permission to view attendees
-    const isCreator = event.createdBy._id.toString() === req.student.id;
+    const isCreator = event.createdBy && event.createdBy._id.toString() === req.student.id;
     const isAdmin = req.student.role === 'admin' || req.student.role === 'cr' || req.student.role === 'CR';
     
     if (!isCreator && !isAdmin) {
