@@ -35,6 +35,17 @@ const CalendarScreen = ({ navigation }) => {
     setSelectedDate(today);
   }, []);
 
+  // Filter events when selectedDate or events change
+  useEffect(() => {
+    if (selectedDate && events.length > 0) {
+      const eventsOnDate = events.filter((event) => {
+        const eventDate = new Date(event.date).toISOString().split('T')[0];
+        return eventDate === selectedDate;
+      });
+      setEventsForSelectedDate(eventsOnDate);
+    }
+  }, [selectedDate, events]);
+
   const loadUser = async () => {
     try {
       const userData = await AsyncStorage.getItem('userData');
@@ -50,10 +61,11 @@ const CalendarScreen = ({ navigation }) => {
     try {
       setLoading(true);
       const response = await getAllEvents();
+      console.log('CalendarScreen - Events loaded:', response.data?.length || 0);
       setEvents(response.data);
       processEventsForCalendar(response.data);
     } catch (error) {
-      console.error('Error loading events:', error);
+      console.error('CalendarScreen - Error loading events:', error);
       Alert.alert('Error', 'Failed to load events');
     } finally {
       setLoading(false);
