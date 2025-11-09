@@ -361,7 +361,7 @@ const InfoRow = ({ icon, label, value }) => (
       <Ionicons name={icon} size={20} color={COLORS.TEXT_LIGHT} />
       <Text style={styles.infoLabel}>{label}</Text>
     </View>
-    <Text style={styles.infoValue}>{value}</Text>
+    <Text style={styles.infoValue} numberOfLines={2}>{value}</Text>
   </View>
 );
 
@@ -466,23 +466,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: SPACING.SM,
+    paddingVertical: SPACING.MD,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.BORDER,
+    minHeight: 50,
   },
   infoLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.SM,
+    flex: 1,
   },
   infoLabel: {
     fontSize: TYPOGRAPHY.SIZES.SM,
     color: COLORS.TEXT_LIGHT,
+    minWidth: 90,
   },
   infoValue: {
     fontSize: TYPOGRAPHY.SIZES.MD,
     color: COLORS.TEXT_DARK,
     fontWeight: '600',
+    flex: 1,
+    textAlign: 'right',
+    flexWrap: 'wrap',
   },
   statsContainer: {
     flexDirection: 'row',
