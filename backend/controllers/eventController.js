@@ -180,10 +180,10 @@ exports.getEventById = async (req, res) => {
       });
     }
 
-    // Check if current user has RSVP'd
-    const hasRSVP = event.attendees.some(
-      att => att.student._id.toString() === req.student.id
-    );
+    // Check if current user has RSVP'd (only if user is authenticated)
+    const hasRSVP = req.student && req.student.id 
+      ? event.attendees.some(att => att.student && att.student._id.toString() === req.student.id)
+      : false;
 
     res.status(200).json({
       success: true,

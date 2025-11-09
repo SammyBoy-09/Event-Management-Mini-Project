@@ -121,7 +121,7 @@ const StudentRegisterScreen = ({ navigation }) => {
     setLoading(true);
 
     try {
-      const response = await registerStudent({
+      const registrationData = {
         name: formData.name.trim(),
         email: formData.email.toLowerCase().trim(),
         usn: formData.usn.trim().toUpperCase(),
@@ -131,7 +131,10 @@ const StudentRegisterScreen = ({ navigation }) => {
         phone: formData.phone.trim(),
         gender: formData.gender,
         department: formData.department.trim(),
-      });
+      };
+
+      console.log('Registration data:', registrationData);
+      const response = await registerStudent(registrationData);
 
       if (response.success) {
         const user = response.data.student;
