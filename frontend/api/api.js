@@ -486,4 +486,7 @@ export const clearAuthData = async () => {
   }
 };
 
+// Export API_URL for push notifications and other services
+export const API_URL = API_BASE_URL.replace('/api', '');
+
 export default api;
