@@ -368,9 +368,9 @@ const styles = StyleSheet.create({
   },
   statsHeader: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    gap: 15,
+    paddingHorizontal: SPACING.LG,
+    paddingVertical: SPACING.LG,
+    gap: SPACING.MD,
   },
   statCard: {
     flex: 1,
@@ -393,8 +393,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   listContainer: {
-    padding: 20,
-    paddingBottom: 30,
+    padding: SPACING.LG,
+    paddingBottom: SPACING.XL,
   },
   eventCard: {
     backgroundColor: COLORS.WHITE,
@@ -451,31 +451,31 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    gap: 8,
+    gap: SPACING.SM,
   },
   button: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 8,
-    gap: 4,
+    paddingVertical: SPACING.SM,
+    borderRadius: RADIUS.MD,
+    gap: SPACING.XS,
   },
   outlineButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#6C63FF',
+    borderColor: COLORS.PRIMARY,
   },
   outlineButtonText: {
-    color: '#6C63FF',
-    fontSize: 13,
+    color: COLORS.PRIMARY,
+    fontSize: TYPOGRAPHY.SIZES.SM,
     fontWeight: '600',
   },
   // QR Scanner Section Styles
   scannerSection: {
-    padding: 16,
-    backgroundColor: '#F7FAFC',
+    padding: SPACING.MD,
+    backgroundColor: COLORS.BACKGROUND_LIGHT,
   },
   scannerButton: {
     backgroundColor: COLORS.PRIMARY,
@@ -553,14 +553,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
+    padding: SPACING.XXL,
   },
   accessDeniedTitle: {
-    fontSize: 24,
+    fontSize: TYPOGRAPHY.SIZES.XXL,
     fontWeight: 'bold',
-    color: '#2D3748',
-    marginTop: 20,
-    marginBottom: 8,
+    color: COLORS.TEXT_DARK,
+    marginTop: SPACING.LG,
+    marginBottom: SPACING.SM,
   },
   accessDeniedText: {
     fontSize: 15,

@@ -887,9 +887,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: SPACING.SM,
-    paddingVertical: 4,
+    paddingVertical: SPACING.XS,
     borderRadius: RADIUS.SM,
-    gap: 4,
+    gap: SPACING.XS,
   },
   statusBadgeText: {
     fontSize: TYPOGRAPHY.SIZES.XS,
@@ -898,7 +898,7 @@ const styles = StyleSheet.create({
   rsvpBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: SPACING.XS,
   },
   rsvpBadgeText: {
     fontSize: TYPOGRAPHY.SIZES.XS,
@@ -932,7 +932,7 @@ const styles = StyleSheet.create({
   eventInfoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: SPACING.XS,
   },
   eventInfoText: {
     fontSize: TYPOGRAPHY.SIZES.XS,
@@ -950,7 +950,7 @@ const styles = StyleSheet.create({
   attendeeInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: SPACING.XS,
   },
   attendeeText: {
     fontSize: TYPOGRAPHY.SIZES.SM,
