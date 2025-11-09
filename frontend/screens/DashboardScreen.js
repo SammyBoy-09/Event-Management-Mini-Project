@@ -38,6 +38,7 @@ const DashboardScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   
   // Search & Filter States
+  const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('All'); // 'All', 'Today', 'This Week', 'This Month', 'Custom'
   const [availabilityFilter, setAvailabilityFilter] = useState(false); // Show only available spots
@@ -265,6 +266,13 @@ const DashboardScreen = ({ navigation }) => {
           <View style={styles.headerRight}>
             <TouchableOpacity 
               style={styles.headerButton}
+              onPress={() => setShowSearchModal(true)}
+            >
+              <Ionicons name="search" size={24} color={COLORS.WHITE} />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.headerButton}
               onPress={() => navigation.navigate('Notifications')}
             >
               <Ionicons name="notifications" size={24} color={COLORS.WHITE} />
@@ -332,145 +340,24 @@ const DashboardScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Search & Filter Section */}
-      <View style={styles.searchSection}>
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color={COLORS.textLight} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search events..."
-            placeholderTextColor={COLORS.textLight}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
-              <Ionicons name="close-circle" size={20} color={COLORS.textLight} />
-            </TouchableOpacity>
-          )}
+      {/* Active Filters Indicator */}
+      {(searchQuery || dateFilter !== 'All' || availabilityFilter) && (
+        <View style={styles.activeFiltersIndicator}>
+          <Ionicons name="funnel" size={16} color={COLORS.primary} />
+          <Text style={styles.activeFiltersIndicatorText}>
+            {searchQuery || dateFilter !== 'All' || availabilityFilter
+              ? `${getFilteredEvents().length} ${getFilteredEvents().length === 1 ? 'result' : 'results'} found`
+              : ''
+            }
+          </Text>
+          <TouchableOpacity 
+            style={styles.activeFiltersIndicatorButton}
+            onPress={() => setShowSearchModal(true)}
+          >
+            <Text style={styles.activeFiltersIndicatorButtonText}>View Filters</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* Date Filters */}
-        <Text style={styles.filterLabel}>Filter by Date</Text>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.dateFiltersContainer}
-        >
-          {['All', 'Today', 'This Week', 'This Month', 'Custom'].map((filter) => (
-            <TouchableOpacity
-              key={filter}
-              style={[
-                styles.dateFilterChip,
-                dateFilter === filter && styles.dateFilterChipActive
-              ]}
-              onPress={() => {
-                if (filter === 'Custom') {
-                  setShowDatePicker(true);
-                  setDatePickerMode('start');
-                } else {
-                  setDateFilter(filter);
-                  if (filter !== 'Custom') {
-                    setCustomDateRange({ start: null, end: null });
-                  }
-                }
-              }}
-            >
-              <Ionicons 
-                name={filter === 'Custom' ? 'calendar-outline' : 'time-outline'} 
-                size={16} 
-                color={dateFilter === filter ? COLORS.WHITE : COLORS.primary} 
-                style={{ marginRight: 4 }}
-              />
-              <Text style={[
-                styles.dateFilterText,
-                dateFilter === filter && styles.dateFilterTextActive
-              ]}>
-                {filter}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {/* Availability Filter */}
-        <View style={styles.availabilityFilter}>
-          <View style={styles.availabilityFilterLeft}>
-            <Ionicons name="checkmark-circle-outline" size={20} color={COLORS.primary} />
-            <Text style={styles.availabilityFilterText}>Show only available spots</Text>
-          </View>
-          <Switch
-            value={availabilityFilter}
-            onValueChange={setAvailabilityFilter}
-            trackColor={{ false: COLORS.border, true: COLORS.primary + '40' }}
-            thumbColor={availabilityFilter ? COLORS.primary : COLORS.textLight}
-          />
-        </View>
-
-        {/* Active Filters Display */}
-        {(searchQuery || dateFilter !== 'All' || availabilityFilter) && (
-          <View style={styles.activeFiltersContainer}>
-            <Text style={styles.activeFiltersLabel}>Active Filters:</Text>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.activeFiltersScroll}
-            >
-              {searchQuery && (
-                <View style={styles.activeFilterChip}>
-                  <Text style={styles.activeFilterText}>Search: "{searchQuery}"</Text>
-                  <TouchableOpacity onPress={() => setSearchQuery('')}>
-                    <Ionicons name="close" size={16} color={COLORS.WHITE} />
-                  </TouchableOpacity>
-                </View>
-              )}
-              {dateFilter !== 'All' && (
-                <View style={styles.activeFilterChip}>
-                  <Text style={styles.activeFilterText}>
-                    {dateFilter === 'Custom' && customDateRange.start 
-                      ? `${new Date(customDateRange.start).toLocaleDateString()} - ${new Date(customDateRange.end).toLocaleDateString()}`
-                      : dateFilter
-                    }
-                  </Text>
-                  <TouchableOpacity onPress={() => {
-                    setDateFilter('All');
-                    setCustomDateRange({ start: null, end: null });
-                  }}>
-                    <Ionicons name="close" size={16} color={COLORS.WHITE} />
-                  </TouchableOpacity>
-                </View>
-              )}
-              {availabilityFilter && (
-                <View style={styles.activeFilterChip}>
-                  <Text style={styles.activeFilterText}>Available Only</Text>
-                  <TouchableOpacity onPress={() => setAvailabilityFilter(false)}>
-                    <Ionicons name="close" size={16} color={COLORS.WHITE} />
-                  </TouchableOpacity>
-                </View>
-              )}
-              <TouchableOpacity 
-                style={styles.clearAllFiltersButton}
-                onPress={() => {
-                  setSearchQuery('');
-                  setDateFilter('All');
-                  setAvailabilityFilter(false);
-                  setCustomDateRange({ start: null, end: null });
-                }}
-              >
-                <Text style={styles.clearAllFiltersText}>Clear All</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        )}
-
-        {/* Results Count */}
-        <Text style={styles.resultsCount}>
-          {searchQuery || dateFilter !== 'All' || availabilityFilter
-            ? `Found ${getFilteredEvents().length} ${getFilteredEvents().length === 1 ? 'event' : 'events'}`
-            : `Showing ${getFilteredEvents().length} ${getFilteredEvents().length === 1 ? 'event' : 'events'}`
-          }
-        </Text>
-      </View>
+      )}
 
       {/* Event Categories */}
       <View style={styles.section}>
@@ -664,6 +551,179 @@ const DashboardScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.bottomSpacing} />
+
+      {/* Search & Filter Modal */}
+      <Modal
+        visible={showSearchModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowSearchModal(false)}
+      >
+        <View style={styles.searchModalOverlay}>
+          <View style={styles.searchModalContent}>
+            {/* Modal Header */}
+            <View style={styles.searchModalHeader}>
+              <Text style={styles.searchModalTitle}>Search & Filter Events</Text>
+              <TouchableOpacity onPress={() => setShowSearchModal(false)}>
+                <Ionicons name="close" size={28} color={COLORS.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView 
+              style={styles.searchModalBody}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Search Bar */}
+              <View style={styles.searchContainer}>
+                <Ionicons name="search" size={20} color={COLORS.textLight} style={styles.searchIcon} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search events..."
+                  placeholderTextColor={COLORS.textLight}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  autoFocus={true}
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+                    <Ionicons name="close-circle" size={20} color={COLORS.textLight} />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Date Filters */}
+              <Text style={styles.filterLabel}>Filter by Date</Text>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.dateFiltersContainer}
+              >
+                {['All', 'Today', 'This Week', 'This Month', 'Custom'].map((filter) => (
+                  <TouchableOpacity
+                    key={filter}
+                    style={[
+                      styles.dateFilterChip,
+                      dateFilter === filter && styles.dateFilterChipActive
+                    ]}
+                    onPress={() => {
+                      if (filter === 'Custom') {
+                        setShowDatePicker(true);
+                        setDatePickerMode('start');
+                      } else {
+                        setDateFilter(filter);
+                        if (filter !== 'Custom') {
+                          setCustomDateRange({ start: null, end: null });
+                        }
+                      }
+                    }}
+                  >
+                    <Ionicons 
+                      name={filter === 'Custom' ? 'calendar-outline' : 'time-outline'} 
+                      size={16} 
+                      color={dateFilter === filter ? COLORS.WHITE : COLORS.primary} 
+                      style={{ marginRight: 4 }}
+                    />
+                    <Text style={[
+                      styles.dateFilterText,
+                      dateFilter === filter && styles.dateFilterTextActive
+                    ]}>
+                      {filter}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              {/* Availability Filter */}
+              <View style={styles.availabilityFilter}>
+                <View style={styles.availabilityFilterLeft}>
+                  <Ionicons name="checkmark-circle-outline" size={20} color={COLORS.primary} />
+                  <Text style={styles.availabilityFilterText}>Show only available spots</Text>
+                </View>
+                <Switch
+                  value={availabilityFilter}
+                  onValueChange={setAvailabilityFilter}
+                  trackColor={{ false: COLORS.border, true: COLORS.primary + '40' }}
+                  thumbColor={availabilityFilter ? COLORS.primary : COLORS.textLight}
+                />
+              </View>
+
+              {/* Active Filters Display */}
+              {(searchQuery || dateFilter !== 'All' || availabilityFilter) && (
+                <View style={styles.activeFiltersContainer}>
+                  <Text style={styles.activeFiltersLabel}>Active Filters:</Text>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.activeFiltersScroll}
+                  >
+                    {searchQuery && (
+                      <View style={styles.activeFilterChip}>
+                        <Text style={styles.activeFilterText}>Search: "{searchQuery}"</Text>
+                        <TouchableOpacity onPress={() => setSearchQuery('')}>
+                          <Ionicons name="close" size={16} color={COLORS.WHITE} />
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                    {dateFilter !== 'All' && (
+                      <View style={styles.activeFilterChip}>
+                        <Text style={styles.activeFilterText}>
+                          {dateFilter === 'Custom' && customDateRange.start 
+                            ? `${new Date(customDateRange.start).toLocaleDateString()} - ${new Date(customDateRange.end).toLocaleDateString()}`
+                            : dateFilter
+                          }
+                        </Text>
+                        <TouchableOpacity onPress={() => {
+                          setDateFilter('All');
+                          setCustomDateRange({ start: null, end: null });
+                        }}>
+                          <Ionicons name="close" size={16} color={COLORS.WHITE} />
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                    {availabilityFilter && (
+                      <View style={styles.activeFilterChip}>
+                        <Text style={styles.activeFilterText}>Available Only</Text>
+                        <TouchableOpacity onPress={() => setAvailabilityFilter(false)}>
+                          <Ionicons name="close" size={16} color={COLORS.WHITE} />
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                    <TouchableOpacity 
+                      style={styles.clearAllFiltersButton}
+                      onPress={() => {
+                        setSearchQuery('');
+                        setDateFilter('All');
+                        setAvailabilityFilter(false);
+                        setCustomDateRange({ start: null, end: null });
+                      }}
+                    >
+                      <Text style={styles.clearAllFiltersText}>Clear All</Text>
+                    </TouchableOpacity>
+                  </ScrollView>
+                </View>
+              )}
+
+              {/* Results Count */}
+              <Text style={styles.resultsCount}>
+                {searchQuery || dateFilter !== 'All' || availabilityFilter
+                  ? `Found ${getFilteredEvents().length} ${getFilteredEvents().length === 1 ? 'event' : 'events'}`
+                  : `Showing ${getFilteredEvents().length} ${getFilteredEvents().length === 1 ? 'event' : 'events'}`
+                }
+              </Text>
+            </ScrollView>
+
+            {/* Modal Footer with Apply Button */}
+            <View style={styles.searchModalFooter}>
+              <TouchableOpacity 
+                style={styles.applyFiltersButton}
+                onPress={() => setShowSearchModal(false)}
+              >
+                <Text style={styles.applyFiltersButtonText}>Apply Filters</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Custom Date Range Picker Modal */}
       {showDatePicker && (
@@ -1001,6 +1061,82 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: SPACING.XL,
+  },
+  // Active Filters Indicator
+  activeFiltersIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary + '15',
+    paddingVertical: SPACING.SM,
+    paddingHorizontal: SPACING.MD,
+    marginHorizontal: SPACING.MD,
+    marginTop: SPACING.MD,
+    borderRadius: RADIUS.MD,
+    gap: SPACING.SM,
+  },
+  activeFiltersIndicatorText: {
+    fontSize: TYPOGRAPHY.SIZES.SM,
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  activeFiltersIndicatorButton: {
+    paddingHorizontal: SPACING.SM,
+    paddingVertical: 4,
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.SM,
+  },
+  activeFiltersIndicatorButtonText: {
+    fontSize: TYPOGRAPHY.SIZES.XS,
+    color: COLORS.WHITE,
+    fontWeight: '600',
+  },
+  // Search Modal Styles
+  searchModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  searchModalContent: {
+    backgroundColor: COLORS.WHITE,
+    borderTopLeftRadius: RADIUS.XL,
+    borderTopRightRadius: RADIUS.XL,
+    maxHeight: '85%',
+  },
+  searchModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.LG,
+    paddingVertical: SPACING.MD,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.BORDER,
+  },
+  searchModalTitle: {
+    fontSize: TYPOGRAPHY.SIZES.XL,
+    fontWeight: '600',
+    color: COLORS.TEXT,
+  },
+  searchModalBody: {
+    paddingHorizontal: SPACING.LG,
+    paddingVertical: SPACING.MD,
+  },
+  searchModalFooter: {
+    paddingHorizontal: SPACING.LG,
+    paddingVertical: SPACING.MD,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.BORDER,
+  },
+  applyFiltersButton: {
+    backgroundColor: COLORS.PRIMARY,
+    paddingVertical: SPACING.MD,
+    borderRadius: RADIUS.MD,
+    alignItems: 'center',
+  },
+  applyFiltersButtonText: {
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    fontWeight: '600',
+    color: COLORS.WHITE,
   },
   // Search & Filter Styles
   searchSection: {
