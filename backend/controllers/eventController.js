@@ -1,6 +1,8 @@
 const Event = require('../models/Event');
 const Student = require('../models/Student');
 const Notification = require('../models/Notification');
+const cloudinary = require('../config/cloudinary');
+const streamifier = require('streamifier');
 
 /**
  * Create a new event
@@ -772,6 +774,65 @@ exports.getEventAttendees = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching attendees',
+      error: error.message
+    });
+  }
+};
+
+// Upload event image to Cloudinary
+exports.uploadEventImage = async (req, res) => {
+  try {
+    // Check if file is present
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No image file provided'
+      });
+    }
+
+    // Create a promise to handle the upload stream
+    const uploadPromise = new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'event-images',
+          resource_type: 'image',
+          transformation: [
+            { width: 1200, height: 630, crop: 'limit' }, // Limit max dimensions
+            { quality: 'auto' }, // Auto optimize quality
+            { fetch_format: 'auto' } // Auto select best format (WebP, etc.)
+          ]
+        },
+        (error, result) => {
+          if (error) {
+            console.error('Cloudinary upload error:', error);
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
+      );
+
+      // Convert buffer to stream and pipe to Cloudinary
+      streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+    });
+
+    // Wait for upload to complete
+    const result = await uploadPromise;
+
+    // Return the secure URL
+    res.status(200).json({
+      success: true,
+      message: 'Image uploaded successfully',
+      data: {
+        imageUrl: result.secure_url,
+        publicId: result.public_id
+      }
+    });
+  } catch (error) {
+    console.error('Upload image error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error uploading image',
       error: error.message
     });
   }

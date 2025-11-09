@@ -12,12 +12,17 @@ const {
   rejectEvent,
   updateEventStatus,
   markAttendance,
-  getEventAttendees
+  getEventAttendees,
+  uploadEventImage
 } = require('../controllers/eventController');
 const { protect } = require('../middleware/authMiddleware');
+const upload = require('../middleware/upload');
 
 // All routes require authentication
 router.use(protect);
+
+// Image upload
+router.post('/upload-image', upload.single('image'), uploadEventImage);
 
 // Event CRUD
 router.post('/', createEvent);

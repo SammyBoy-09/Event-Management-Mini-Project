@@ -487,6 +487,15 @@ const DashboardScreen = ({ navigation }) => {
                 )}
               </View>
               
+              {/* Event Image */}
+              {event.image && (
+                <Image
+                  source={{ uri: event.image }}
+                  style={styles.eventImage}
+                  resizeMode="cover"
+                />
+              )}
+              
               <Text style={styles.eventTitle}>{event.title}</Text>
               <Text style={styles.eventDescription} numberOfLines={2}>
                 {event.description}
@@ -895,6 +904,13 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.SIZES.XS,
     color: COLORS.SUCCESS,
     fontWeight: '600',
+  },
+  eventImage: {
+    width: '100%',
+    height: 180,
+    borderRadius: RADIUS.SM,
+    marginBottom: SPACING.SM,
+    backgroundColor: COLORS.BORDER_LIGHT,
   },
   eventTitle: {
     fontSize: TYPOGRAPHY.SIZES.LG,

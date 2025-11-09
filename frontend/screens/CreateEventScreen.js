@@ -7,14 +7,17 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
+import * as ImagePicker from 'expo-image-picker';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
-import { createEvent } from '../api/api';
+import { createEvent, uploadEventImage } from '../api/api';
 
 const CATEGORIES = [
   'Technology',
@@ -41,11 +44,14 @@ const CreateEventScreen = ({ navigation }) => {
     rsvpRequired: true,
     isPublic: true,
     tags: '',
+    image: null, // Will store Cloudinary URL
   });
   
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null); // Local image URI for preview
 
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
@@ -65,6 +71,98 @@ const CreateEventScreen = ({ navigation }) => {
       const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
       setFormData({ ...formData, time: `${hours}:${minutes}` });
     }
+  };
+
+  const requestPermissions = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission Required',
+        'Sorry, we need camera roll permissions to upload event images!'
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const pickImage = async () => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) return;
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9], // Landscape aspect ratio for event flyers
+        quality: 0.8, // Good quality while keeping file size reasonable
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const imageUri = result.assets[0].uri;
+        setSelectedImage(imageUri);
+        
+        // Upload immediately to Cloudinary
+        await handleImageUpload(imageUri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
+    }
+  };
+
+  const handleImageUpload = async (imageUri) => {
+    try {
+      setUploadingImage(true);
+
+      // Create form data
+      const formDataImage = new FormData();
+      
+      // Get file extension from URI
+      const uriParts = imageUri.split('.');
+      const fileType = uriParts[uriParts.length - 1];
+      
+      formDataImage.append('image', {
+        uri: imageUri,
+        name: `event-image.${fileType}`,
+        type: `image/${fileType}`,
+      });
+
+      // Upload to backend
+      const response = await uploadEventImage(formDataImage);
+      
+      if (response.success) {
+        // Store Cloudinary URL in form data
+        setFormData({ ...formData, image: response.data.imageUrl });
+        Alert.alert('Success', 'Image uploaded successfully!');
+      } else {
+        throw new Error(response.message || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      Alert.alert('Upload Failed', error.message || 'Failed to upload image. Please try again.');
+      // Clear the selected image on error
+      setSelectedImage(null);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const removeImage = () => {
+    Alert.alert(
+      'Remove Image',
+      'Are you sure you want to remove this image?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            setSelectedImage(null);
+            setFormData({ ...formData, image: null });
+          },
+        },
+      ]
+    );
   };
 
   const validateForm = () => {
@@ -131,6 +229,7 @@ const CreateEventScreen = ({ navigation }) => {
         rsvpRequired: formData.rsvpRequired,
         isPublic: formData.isPublic,
         tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
+        image: formData.image, // Include Cloudinary URL
       };
 
       await createEvent(eventData);
@@ -185,6 +284,52 @@ const CreateEventScreen = ({ navigation }) => {
             multiline
             numberOfLines={4}
           />
+
+          {/* Event Image Upload */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Event Flyer/Poster (Optional)</Text>
+            <Text style={styles.helperText}>
+              Upload an event flyer, poster, or invitation image
+            </Text>
+            
+            {selectedImage ? (
+              <View style={styles.imagePreviewContainer}>
+                <Image
+                  source={{ uri: selectedImage }}
+                  style={styles.imagePreview}
+                  resizeMode="cover"
+                />
+                {uploadingImage && (
+                  <View style={styles.uploadingOverlay}>
+                    <ActivityIndicator size="large" color={COLORS.PRIMARY} />
+                    <Text style={styles.uploadingText}>Uploading...</Text>
+                  </View>
+                )}
+                {!uploadingImage && (
+                  <TouchableOpacity
+                    style={styles.removeImageButton}
+                    onPress={removeImage}
+                  >
+                    <Ionicons name="close-circle" size={30} color={COLORS.ERROR} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.imagePickerButton}
+                onPress={pickImage}
+                disabled={uploadingImage}
+              >
+                <Ionicons name="image" size={32} color={COLORS.PRIMARY} />
+                <Text style={styles.imagePickerText}>
+                  {uploadingImage ? 'Uploading...' : 'Choose Image'}
+                </Text>
+                <Text style={styles.imagePickerHint}>
+                  JPG, PNG, GIF, or WebP • Max 5MB
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
           {/* Category */}
           <View style={styles.inputGroup}>
@@ -432,6 +577,67 @@ const styles = StyleSheet.create({
   submitButton: {
     marginTop: SPACING.MD,
     marginBottom: SPACING.XL,
+  },
+  helperText: {
+    fontSize: TYPOGRAPHY.SIZES.SM,
+    color: COLORS.TEXT_LIGHT,
+    marginTop: SPACING.XS,
+    marginBottom: SPACING.SM,
+  },
+  imagePickerButton: {
+    backgroundColor: COLORS.WHITE,
+    borderRadius: RADIUS.SM,
+    padding: SPACING.XL,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.BORDER_LIGHT,
+    borderStyle: 'dashed',
+    marginTop: SPACING.SM,
+    ...SHADOWS.SMALL,
+  },
+  imagePickerText: {
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    fontWeight: '600',
+    color: COLORS.PRIMARY,
+    marginTop: SPACING.SM,
+  },
+  imagePickerHint: {
+    fontSize: TYPOGRAPHY.SIZES.SM,
+    color: COLORS.TEXT_LIGHT,
+    marginTop: SPACING.XS,
+  },
+  imagePreviewContainer: {
+    position: 'relative',
+    marginTop: SPACING.SM,
+    borderRadius: RADIUS.SM,
+    overflow: 'hidden',
+    ...SHADOWS.SMALL,
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: RADIUS.SM,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: SPACING.SM,
+    right: SPACING.SM,
+    backgroundColor: COLORS.WHITE,
+    borderRadius: 20,
+    ...SHADOWS.MEDIUM,
+  },
+  uploadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadingText: {
+    color: COLORS.WHITE,
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    fontWeight: '600',
+    marginTop: SPACING.SM,
   },
 });
 

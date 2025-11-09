@@ -197,6 +197,26 @@ export const createEvent = async (eventData) => {
   }
 };
 
+// Upload event image to Cloudinary
+export const uploadEventImage = async (formData) => {
+  try {
+    const token = await AsyncStorage.getItem('userToken');
+    
+    const response = await axios.post(`${API_BASE_URL}/events/upload-image`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${token}`,
+      },
+      timeout: 30000, // 30 seconds for image upload
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Upload image error:', error.response?.data || error.message);
+    throw error.response?.data || { message: 'Failed to upload image' };
+  }
+};
+
 // Get all events with filters
 export const getAllEvents = async (filters = {}) => {
   try {

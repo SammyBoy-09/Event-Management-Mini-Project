@@ -8,6 +8,7 @@ import {
   Alert,
   Share,
   Linking,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme';
@@ -178,6 +179,15 @@ const EventDetailsScreen = ({ route, navigation }) => {
           </View>
           
           <Text style={styles.title}>{event.title}</Text>
+          
+          {/* Event Image */}
+          {event.image && (
+            <Image
+              source={{ uri: event.image }}
+              style={styles.eventImage}
+              resizeMode="cover"
+            />
+          )}
           
           {event.hasRSVP && (
             <View style={styles.rsvpBadge}>
@@ -393,6 +403,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.TEXT_DARK,
     marginBottom: SPACING.SM,
+  },
+  eventImage: {
+    width: '100%',
+    height: 220,
+    borderRadius: RADIUS.MD,
+    marginBottom: SPACING.MD,
+    backgroundColor: COLORS.BORDER_LIGHT,
   },
   rsvpBadge: {
     flexDirection: 'row',
