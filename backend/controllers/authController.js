@@ -113,8 +113,8 @@ exports.loginStudent = async (req, res) => {
       });
     }
 
-    // Find student by email
-    const student = await Student.findOne({ email: email.toLowerCase() });
+    // Find student by email and populate registered events
+    const student = await Student.findOne({ email: email.toLowerCase() }).populate('registeredEvents');
 
     if (!student) {
       return res.status(401).json({
@@ -151,7 +151,8 @@ exports.loginStudent = async (req, res) => {
           phone: student.phone,
           gender: student.gender,
           department: student.department,
-          role: student.role
+          role: student.role,
+          registeredEvents: student.registeredEvents || []
         }
       }
     });

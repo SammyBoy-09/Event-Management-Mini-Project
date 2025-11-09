@@ -241,6 +241,21 @@ export const deleteEvent = async (eventId) => {
 export const rsvpEvent = async (eventId) => {
   try {
     const response = await api.post(`/events/${eventId}/rsvp`);
+    
+    // Update user's registeredEvents in AsyncStorage
+    const userDataStr = await AsyncStorage.getItem('userData');
+    if (userDataStr) {
+      const userData = JSON.parse(userDataStr);
+      if (!userData.registeredEvents) {
+        userData.registeredEvents = [];
+      }
+      if (!userData.registeredEvents.includes(eventId)) {
+        userData.registeredEvents.push(eventId);
+      }
+      await AsyncStorage.setItem('userData', JSON.stringify(userData));
+      console.log('✅ Updated user registeredEvents after RSVP:', userData.registeredEvents);
+    }
+    
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Failed to RSVP' };
@@ -251,6 +266,18 @@ export const rsvpEvent = async (eventId) => {
 export const cancelRSVP = async (eventId) => {
   try {
     const response = await api.delete(`/events/${eventId}/rsvp`);
+    
+    // Update user's registeredEvents in AsyncStorage
+    const userDataStr = await AsyncStorage.getItem('userData');
+    if (userDataStr) {
+      const userData = JSON.parse(userDataStr);
+      if (userData.registeredEvents) {
+        userData.registeredEvents = userData.registeredEvents.filter(id => id !== eventId);
+      }
+      await AsyncStorage.setItem('userData', JSON.stringify(userData));
+      console.log('✅ Updated user registeredEvents after cancel:', userData.registeredEvents);
+    }
+    
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Failed to cancel RSVP' };

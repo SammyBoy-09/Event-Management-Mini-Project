@@ -14,7 +14,6 @@ import {
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { getAllEvents, rsvpEvent, cancelRSVP, updateEventStatus } from '../api/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -40,33 +39,79 @@ const DashboardScreen = ({ navigation }) => {
   // Search & Filter States
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [dateFilter, setDateFilter] = useState('All'); // 'All', 'Today', 'This Week', 'This Month', 'Custom'
+  const [dateFilter, setDateFilter] = useState('All'); // 'All', 'Today', 'This Week', 'This Month'
   const [availabilityFilter, setAvailabilityFilter] = useState(false); // Show only available spots
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [customDateRange, setCustomDateRange] = useState({ start: null, end: null });
-  const [datePickerMode, setDatePickerMode] = useState('start'); // 'start' or 'end'
 
   useEffect(() => {
-    loadUserData();
-    loadEvents();
+    const initializeScreen = async () => {
+      const userData = await loadUserData();
+      await loadEvents(userData);
+    };
+    initializeScreen();
   }, []);
 
   const loadUserData = async () => {
     try {
       const userData = await AsyncStorage.getItem('userData');
       if (userData) {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        return parsedUser;
       }
+      return null;
     } catch (error) {
       console.error('Error loading user data:', error);
+      return null;
     }
   };
 
-  const loadEvents = async () => {
+  const loadEvents = async (currentUser = null) => {
     try {
       setLoading(true);
       const response = await getAllEvents({ upcoming: 'true' });
-      setEvents(response.data || []);
+      
+      // If no user passed, get from AsyncStorage
+      if (!currentUser) {
+        const userDataStr = await AsyncStorage.getItem('userData');
+        currentUser = userDataStr ? JSON.parse(userDataStr) : null;
+      }
+      
+      if (!currentUser) {
+        console.log('⚠️ No user data found');
+        setEvents(response.data || []);
+        return;
+      }
+      
+      console.log('👤 Current User:', {
+        id: currentUser._id,
+        name: currentUser.name,
+        registeredEvents: currentUser.registeredEvents || []
+      });
+      
+      // Get list of registered event IDs from user data
+      const registeredEventIds = (currentUser.registeredEvents || []).map(eventId => 
+        typeof eventId === 'object' ? eventId._id : eventId
+      );
+      
+      console.log('✅ Registered Event IDs:', registeredEventIds);
+      
+      // Add hasRSVP property based on user's registeredEvents array
+      const eventsWithRSVP = (response.data || []).map(event => {
+        const isRSVPd = registeredEventIds.includes(event._id);
+        
+        return {
+          ...event,
+          hasRSVP: isRSVPd
+        };
+      });
+      
+      console.log('📋 Events with RSVP flags:', eventsWithRSVP.map(e => ({
+        title: e.title,
+        eventId: e._id,
+        hasRSVP: e.hasRSVP
+      })));
+      
+      setEvents(eventsWithRSVP);
     } catch (error) {
       console.error('Error loading events:', error);
       Alert.alert('Error', 'Failed to load events');
@@ -94,9 +139,16 @@ const DashboardScreen = ({ navigation }) => {
         await rsvpEvent(event._id);
         Alert.alert('Success', 'RSVP confirmed successfully!');
       }
-      loadEvents();
+      
+      // Reload user data to get updated registeredEvents
+      const updatedUser = await loadUserData();
+      // Reload events with updated user data
+      await loadEvents(updatedUser);
     } catch (error) {
       Alert.alert('Error', error.message || 'Failed to process RSVP');
+      // Reload on error to ensure consistency
+      const updatedUser = await loadUserData();
+      await loadEvents(updatedUser);
     }
   };
 
@@ -180,14 +232,6 @@ const DashboardScreen = ({ navigation }) => {
           case 'This Month':
             const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
             return eventDate >= today && eventDate <= monthEnd;
-          
-          case 'Custom':
-            if (customDateRange.start && customDateRange.end) {
-              const start = new Date(customDateRange.start);
-              const end = new Date(customDateRange.end);
-              return eventDate >= start && eventDate <= end;
-            }
-            return true;
           
           default:
             return true;
@@ -425,7 +469,9 @@ const DashboardScreen = ({ navigation }) => {
             <Text style={styles.loadingText}>Loading events...</Text>
           </View>
         ) : getFilteredEvents().length > 0 ? (
-          getFilteredEvents().map((event) => (
+          getFilteredEvents().map((event) => {
+            console.log('Event RSVP Status:', event.title, 'hasRSVP:', event.hasRSVP);
+            return (
             <TouchableOpacity
               key={event._id}
               style={styles.eventCard}
@@ -519,23 +565,35 @@ const DashboardScreen = ({ navigation }) => {
                 <TouchableOpacity
                   style={[
                     styles.rsvpButton,
-                    event.hasRSVP && styles.rsvpButtonActive
+                    event.hasRSVP && {
+                      backgroundColor: '#10B981',
+                      borderWidth: 0,
+                    }
                   ]}
                   onPress={(e) => {
                     e.stopPropagation();
                     handleRSVP(event);
                   }}
                 >
+                  {event.hasRSVP && (
+                    <Ionicons 
+                      name="checkmark-circle" 
+                      size={16} 
+                      color="#FFFFFF" 
+                      style={{ marginRight: 4 }}
+                    />
+                  )}
                   <Text style={[
                     styles.rsvpButtonText,
-                    event.hasRSVP && styles.rsvpButtonTextActive
+                    event.hasRSVP && { color: '#FFFFFF' }
                   ]}>
-                    {event.hasRSVP ? 'Cancel RSVP' : 'RSVP'}
+                    {event.hasRSVP ? 'Registered' : 'RSVP'}
                   </Text>
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
-          ))
+            );
+          })
         ) : (
           <View style={styles.emptyContainer}>
             <Ionicons name="calendar-outline" size={64} color={COLORS.TEXT_LIGHT} />
@@ -598,7 +656,7 @@ const DashboardScreen = ({ navigation }) => {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.dateFiltersContainer}
               >
-                {['All', 'Today', 'This Week', 'This Month', 'Custom'].map((filter) => (
+                {['All', 'Today', 'This Week', 'This Month'].map((filter) => (
                   <TouchableOpacity
                     key={filter}
                     style={[
@@ -606,19 +664,11 @@ const DashboardScreen = ({ navigation }) => {
                       dateFilter === filter && styles.dateFilterChipActive
                     ]}
                     onPress={() => {
-                      if (filter === 'Custom') {
-                        setShowDatePicker(true);
-                        setDatePickerMode('start');
-                      } else {
-                        setDateFilter(filter);
-                        if (filter !== 'Custom') {
-                          setCustomDateRange({ start: null, end: null });
-                        }
-                      }
+                      setDateFilter(filter);
                     }}
                   >
                     <Ionicons 
-                      name={filter === 'Custom' ? 'calendar-outline' : 'time-outline'} 
+                      name="time-outline" 
                       size={16} 
                       color={dateFilter === filter ? COLORS.WHITE : COLORS.primary} 
                       style={{ marginRight: 4 }}
@@ -667,15 +717,9 @@ const DashboardScreen = ({ navigation }) => {
                     {dateFilter !== 'All' && (
                       <View style={styles.activeFilterChip}>
                         <Text style={styles.activeFilterText}>
-                          {dateFilter === 'Custom' && customDateRange.start 
-                            ? `${new Date(customDateRange.start).toLocaleDateString()} - ${new Date(customDateRange.end).toLocaleDateString()}`
-                            : dateFilter
-                          }
+                          {dateFilter}
                         </Text>
-                        <TouchableOpacity onPress={() => {
-                          setDateFilter('All');
-                          setCustomDateRange({ start: null, end: null });
-                        }}>
+                        <TouchableOpacity onPress={() => setDateFilter('All')}>
                           <Ionicons name="close" size={16} color={COLORS.WHITE} />
                         </TouchableOpacity>
                       </View>
@@ -694,7 +738,6 @@ const DashboardScreen = ({ navigation }) => {
                         setSearchQuery('');
                         setDateFilter('All');
                         setAvailabilityFilter(false);
-                        setCustomDateRange({ start: null, end: null });
                       }}
                     >
                       <Text style={styles.clearAllFiltersText}>Clear All</Text>
@@ -725,103 +768,6 @@ const DashboardScreen = ({ navigation }) => {
         </View>
       </Modal>
 
-      {/* Custom Date Range Picker Modal */}
-      {showDatePicker && (
-        <Modal
-          visible={showDatePicker}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => {
-            setShowDatePicker(false);
-            setDatePickerMode('start');
-          }}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Select Date Range</Text>
-                <TouchableOpacity onPress={() => {
-                  setShowDatePicker(false);
-                  setDatePickerMode('start');
-                }}>
-                  <Ionicons name="close" size={24} color={COLORS.text} />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.datePickerContent}>
-                <Text style={styles.datePickerLabel}>
-                  {datePickerMode === 'start' ? 'Start Date' : 'End Date'}
-                </Text>
-                
-                <DateTimePicker
-                  value={
-                    datePickerMode === 'start' 
-                      ? (customDateRange.start || new Date())
-                      : (customDateRange.end || customDateRange.start || new Date())
-                  }
-                  mode="date"
-                  display="spinner"
-                  onChange={(event, selectedDate) => {
-                    if (event.type === 'set' && selectedDate) {
-                      if (datePickerMode === 'start') {
-                        setCustomDateRange({ ...customDateRange, start: selectedDate });
-                      } else {
-                        setCustomDateRange({ ...customDateRange, end: selectedDate });
-                      }
-                    }
-                  }}
-                  minimumDate={datePickerMode === 'start' ? new Date() : (customDateRange.start || new Date())}
-                />
-
-                <View style={styles.datePickerButtons}>
-                  {datePickerMode === 'end' && (
-                    <TouchableOpacity 
-                      style={[styles.modalButton, styles.modalButtonSecondary]}
-                      onPress={() => setDatePickerMode('start')}
-                    >
-                      <Text style={styles.modalButtonTextSecondary}>Back to Start Date</Text>
-                    </TouchableOpacity>
-                  )}
-                  
-                  <TouchableOpacity 
-                    style={[styles.modalButton, styles.modalButtonPrimary]}
-                    onPress={() => {
-                      if (datePickerMode === 'start') {
-                        if (!customDateRange.start) {
-                          Alert.alert('Error', 'Please select a start date');
-                          return;
-                        }
-                        // Initialize end date to start date if not set
-                        if (!customDateRange.end) {
-                          setCustomDateRange({ ...customDateRange, end: customDateRange.start });
-                        }
-                        setDatePickerMode('end');
-                      } else {
-                        if (customDateRange.start && customDateRange.end) {
-                          // Ensure end date is not before start date
-                          if (customDateRange.end < customDateRange.start) {
-                            Alert.alert('Error', 'End date cannot be before start date');
-                            return;
-                          }
-                          setDateFilter('Custom');
-                          setShowDatePicker(false);
-                          setShowSearchModal(false); // Close search modal too
-                        } else {
-                          Alert.alert('Error', 'Please select both start and end dates');
-                        }
-                      }
-                    }}
-                  >
-                    <Text style={styles.modalButtonTextPrimary}>
-                      {datePickerMode === 'start' ? 'Next' : 'Apply'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      )}
     </ScrollView>
   );
 };
@@ -1036,15 +982,16 @@ const styles = StyleSheet.create({
     color: COLORS.TEXT_LIGHT,
   },
   rsvpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: SPACING.MD,
     paddingVertical: SPACING.XS,
     borderRadius: RADIUS.SM,
     backgroundColor: COLORS.PRIMARY,
   },
   rsvpButtonActive: {
-    backgroundColor: COLORS.WHITE,
-    borderWidth: 1,
-    borderColor: COLORS.PRIMARY,
+    backgroundColor: '#10B981', // Green color for RSVP'd state
+    borderWidth: 0,
   },
   rsvpButtonText: {
     fontSize: TYPOGRAPHY.SIZES.SM,
@@ -1052,7 +999,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   rsvpButtonTextActive: {
-    color: COLORS.PRIMARY,
+    color: COLORS.WHITE,
   },
   loadingContainer: {
     padding: SPACING.XL,
@@ -1313,21 +1260,6 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.SIZES.LG,
     fontWeight: '600',
     color: COLORS.TEXT,
-  },
-  datePickerContent: {
-    paddingHorizontal: SPACING.LG,
-    paddingTop: SPACING.LG,
-  },
-  datePickerLabel: {
-    fontSize: TYPOGRAPHY.SIZES.MD,
-    fontWeight: '600',
-    color: COLORS.TEXT,
-    marginBottom: SPACING.SM,
-  },
-  datePickerButtons: {
-    flexDirection: 'row',
-    gap: SPACING.SM,
-    marginTop: SPACING.LG,
   },
   modalButton: {
     flex: 1,
