@@ -26,11 +26,43 @@ const MyEventsScreen = ({ navigation }) => {
   const loadMyEvents = async () => {
     try {
       setLoading(true);
+      
+      // Get current user ID from AsyncStorage
+      const userData = await AsyncStorage.getItem('userData');
+      const user = userData ? JSON.parse(userData) : null;
+      
+      if (!user) {
+        Alert.alert('Error', 'User not found. Please login again.');
+        return;
+      }
+      
       const response = await getAllEvents();
       
-      // Filter only events where user has RSVP'd
-      const myEvents = response.data.data.filter(event => event.hasRSVP);
+      console.log('My Events - User ID:', user.id);
       
+      // Handle different response structures
+      let allEvents = [];
+      if (Array.isArray(response.data)) {
+        allEvents = response.data;
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        allEvents = response.data.data;
+      } else if (response.data.events && Array.isArray(response.data.events)) {
+        allEvents = response.data.events;
+      }
+      
+      // Filter events where current user is in attendees array
+      const myEvents = allEvents.filter(event => {
+        if (!event.attendees || !Array.isArray(event.attendees)) return false;
+        
+        // Check if user ID exists in attendees array
+        return event.attendees.some(attendee => {
+          const attendeeId = attendee.student?._id || attendee.student;
+          return attendeeId === user.id;
+        });
+      });
+      
+      console.log('My Events - Total events:', allEvents.length);
+      console.log('My Events - My RSVP events:', myEvents.length);
       setEvents(myEvents);
     } catch (error) {
       console.error('Error loading my events:', error);
