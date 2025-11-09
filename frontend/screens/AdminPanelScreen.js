@@ -56,7 +56,8 @@ const AdminPanelScreen = ({ navigation }) => {
     try {
       setLoading(true);
       const response = await api.get('/events?status=pending');
-      setPendingEvents(response.data.events || []);
+      console.log('AdminPanel - Pending events response:', response.data);
+      setPendingEvents(response.data.data || response.data.events || []);
     } catch (error) {
       console.error('Error loading pending events:', error);
       Alert.alert('Error', error.response?.data?.message || 'Failed to load pending events');
