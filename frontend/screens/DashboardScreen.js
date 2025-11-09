@@ -9,8 +9,12 @@ import {
   Dimensions,
   Alert,
   Image,
+  TextInput,
+  Modal,
+  Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { getAllEvents, rsvpEvent, cancelRSVP, updateEventStatus } from '../api/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -32,6 +36,14 @@ const DashboardScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [loading, setLoading] = useState(true);
+  
+  // Search & Filter States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateFilter, setDateFilter] = useState('All'); // 'All', 'Today', 'This Week', 'This Month', 'Custom'
+  const [availabilityFilter, setAvailabilityFilter] = useState(false); // Show only available spots
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [customDateRange, setCustomDateRange] = useState({ start: null, end: null });
+  const [datePickerMode, setDatePickerMode] = useState('start'); // 'start' or 'end'
 
   useEffect(() => {
     loadUserData();
@@ -129,10 +141,67 @@ const DashboardScreen = ({ navigation }) => {
   };
 
   const getFilteredEvents = () => {
-    if (selectedCategory === 'All') {
-      return events;
+    let filtered = [...events];
+
+    // Category filter
+    if (selectedCategory !== 'All') {
+      filtered = filtered.filter(event => event.category === selectedCategory);
     }
-    return events.filter(event => event.category === selectedCategory);
+
+    // Search filter (search in title, description, organizer, location)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(event => 
+        event.title?.toLowerCase().includes(query) ||
+        event.description?.toLowerCase().includes(query) ||
+        event.organizer?.toLowerCase().includes(query) ||
+        event.location?.toLowerCase().includes(query)
+      );
+    }
+
+    // Date filter
+    if (dateFilter !== 'All') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      filtered = filtered.filter(event => {
+        const eventDate = new Date(event.date);
+        
+        switch (dateFilter) {
+          case 'Today':
+            return eventDate.toDateString() === today.toDateString();
+          
+          case 'This Week':
+            const weekEnd = new Date(today);
+            weekEnd.setDate(today.getDate() + 7);
+            return eventDate >= today && eventDate <= weekEnd;
+          
+          case 'This Month':
+            const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            return eventDate >= today && eventDate <= monthEnd;
+          
+          case 'Custom':
+            if (customDateRange.start && customDateRange.end) {
+              const start = new Date(customDateRange.start);
+              const end = new Date(customDateRange.end);
+              return eventDate >= start && eventDate <= end;
+            }
+            return true;
+          
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Availability filter (show only events with available spots)
+    if (availabilityFilter) {
+      filtered = filtered.filter(event => 
+        event.currentAttendees < event.maxAttendees
+      );
+    }
+
+    return filtered;
   };
 
   const getStatusBadgeColor = (status) => {
@@ -261,6 +330,146 @@ const DashboardScreen = ({ navigation }) => {
             </TouchableOpacity>
           )}
         </View>
+      </View>
+
+      {/* Search & Filter Section */}
+      <View style={styles.searchSection}>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color={COLORS.textLight} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search events..."
+            placeholderTextColor={COLORS.textLight}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+              <Ionicons name="close-circle" size={20} color={COLORS.textLight} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Date Filters */}
+        <Text style={styles.filterLabel}>Filter by Date</Text>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.dateFiltersContainer}
+        >
+          {['All', 'Today', 'This Week', 'This Month', 'Custom'].map((filter) => (
+            <TouchableOpacity
+              key={filter}
+              style={[
+                styles.dateFilterChip,
+                dateFilter === filter && styles.dateFilterChipActive
+              ]}
+              onPress={() => {
+                if (filter === 'Custom') {
+                  setShowDatePicker(true);
+                  setDatePickerMode('start');
+                } else {
+                  setDateFilter(filter);
+                  if (filter !== 'Custom') {
+                    setCustomDateRange({ start: null, end: null });
+                  }
+                }
+              }}
+            >
+              <Ionicons 
+                name={filter === 'Custom' ? 'calendar-outline' : 'time-outline'} 
+                size={16} 
+                color={dateFilter === filter ? COLORS.WHITE : COLORS.primary} 
+                style={{ marginRight: 4 }}
+              />
+              <Text style={[
+                styles.dateFilterText,
+                dateFilter === filter && styles.dateFilterTextActive
+              ]}>
+                {filter}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Availability Filter */}
+        <View style={styles.availabilityFilter}>
+          <View style={styles.availabilityFilterLeft}>
+            <Ionicons name="checkmark-circle-outline" size={20} color={COLORS.primary} />
+            <Text style={styles.availabilityFilterText}>Show only available spots</Text>
+          </View>
+          <Switch
+            value={availabilityFilter}
+            onValueChange={setAvailabilityFilter}
+            trackColor={{ false: COLORS.border, true: COLORS.primary + '40' }}
+            thumbColor={availabilityFilter ? COLORS.primary : COLORS.textLight}
+          />
+        </View>
+
+        {/* Active Filters Display */}
+        {(searchQuery || dateFilter !== 'All' || availabilityFilter) && (
+          <View style={styles.activeFiltersContainer}>
+            <Text style={styles.activeFiltersLabel}>Active Filters:</Text>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.activeFiltersScroll}
+            >
+              {searchQuery && (
+                <View style={styles.activeFilterChip}>
+                  <Text style={styles.activeFilterText}>Search: "{searchQuery}"</Text>
+                  <TouchableOpacity onPress={() => setSearchQuery('')}>
+                    <Ionicons name="close" size={16} color={COLORS.WHITE} />
+                  </TouchableOpacity>
+                </View>
+              )}
+              {dateFilter !== 'All' && (
+                <View style={styles.activeFilterChip}>
+                  <Text style={styles.activeFilterText}>
+                    {dateFilter === 'Custom' && customDateRange.start 
+                      ? `${new Date(customDateRange.start).toLocaleDateString()} - ${new Date(customDateRange.end).toLocaleDateString()}`
+                      : dateFilter
+                    }
+                  </Text>
+                  <TouchableOpacity onPress={() => {
+                    setDateFilter('All');
+                    setCustomDateRange({ start: null, end: null });
+                  }}>
+                    <Ionicons name="close" size={16} color={COLORS.WHITE} />
+                  </TouchableOpacity>
+                </View>
+              )}
+              {availabilityFilter && (
+                <View style={styles.activeFilterChip}>
+                  <Text style={styles.activeFilterText}>Available Only</Text>
+                  <TouchableOpacity onPress={() => setAvailabilityFilter(false)}>
+                    <Ionicons name="close" size={16} color={COLORS.WHITE} />
+                  </TouchableOpacity>
+                </View>
+              )}
+              <TouchableOpacity 
+                style={styles.clearAllFiltersButton}
+                onPress={() => {
+                  setSearchQuery('');
+                  setDateFilter('All');
+                  setAvailabilityFilter(false);
+                  setCustomDateRange({ start: null, end: null });
+                }}
+              >
+                <Text style={styles.clearAllFiltersText}>Clear All</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Results Count */}
+        <Text style={styles.resultsCount}>
+          {searchQuery || dateFilter !== 'All' || availabilityFilter
+            ? `Found ${getFilteredEvents().length} ${getFilteredEvents().length === 1 ? 'event' : 'events'}`
+            : `Showing ${getFilteredEvents().length} ${getFilteredEvents().length === 1 ? 'event' : 'events'}`
+          }
+        </Text>
       </View>
 
       {/* Event Categories */}
@@ -455,6 +664,85 @@ const DashboardScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.bottomSpacing} />
+
+      {/* Custom Date Range Picker Modal */}
+      {showDatePicker && (
+        <Modal
+          visible={showDatePicker}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowDatePicker(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Select Date Range</Text>
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Ionicons name="close" size={24} color={COLORS.text} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.datePickerContent}>
+                <Text style={styles.datePickerLabel}>
+                  {datePickerMode === 'start' ? 'Start Date' : 'End Date'}
+                </Text>
+                
+                <DateTimePicker
+                  value={
+                    datePickerMode === 'start' 
+                      ? (customDateRange.start || new Date())
+                      : (customDateRange.end || new Date())
+                  }
+                  mode="date"
+                  display="spinner"
+                  onChange={(event, selectedDate) => {
+                    if (selectedDate) {
+                      if (datePickerMode === 'start') {
+                        setCustomDateRange({ ...customDateRange, start: selectedDate });
+                        setDatePickerMode('end');
+                      } else {
+                        setCustomDateRange({ ...customDateRange, end: selectedDate });
+                      }
+                    }
+                  }}
+                  minimumDate={datePickerMode === 'start' ? new Date() : customDateRange.start}
+                />
+
+                <View style={styles.datePickerButtons}>
+                  {datePickerMode === 'end' && (
+                    <TouchableOpacity 
+                      style={[styles.modalButton, styles.modalButtonSecondary]}
+                      onPress={() => setDatePickerMode('start')}
+                    >
+                      <Text style={styles.modalButtonTextSecondary}>Back to Start Date</Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  <TouchableOpacity 
+                    style={[styles.modalButton, styles.modalButtonPrimary]}
+                    onPress={() => {
+                      if (datePickerMode === 'start') {
+                        setDatePickerMode('end');
+                      } else {
+                        if (customDateRange.start && customDateRange.end) {
+                          setDateFilter('Custom');
+                          setShowDatePicker(false);
+                        } else {
+                          Alert.alert('Error', 'Please select both start and end dates');
+                        }
+                      }
+                    }}
+                  >
+                    <Text style={styles.modalButtonTextPrimary}>
+                      {datePickerMode === 'start' ? 'Next' : 'Apply'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </ScrollView>
   );
 };
@@ -713,6 +1001,202 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: SPACING.XL,
+  },
+  // Search & Filter Styles
+  searchSection: {
+    paddingHorizontal: SPACING.MD,
+    paddingVertical: SPACING.MD,
+    backgroundColor: COLORS.WHITE,
+    marginTop: SPACING.MD,
+    borderRadius: RADIUS.LG,
+    marginHorizontal: SPACING.MD,
+    ...SHADOWS.SMALL,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.BACKGROUND,
+    borderRadius: RADIUS.MD,
+    paddingHorizontal: SPACING.SM,
+    marginBottom: SPACING.MD,
+  },
+  searchIcon: {
+    marginRight: SPACING.SM,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: SPACING.SM,
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    color: COLORS.TEXT,
+  },
+  clearButton: {
+    padding: SPACING.XS,
+  },
+  filterLabel: {
+    fontSize: TYPOGRAPHY.SIZES.SM,
+    fontWeight: '600',
+    color: COLORS.TEXT,
+    marginBottom: SPACING.SM,
+    marginTop: SPACING.XS,
+  },
+  dateFiltersContainer: {
+    paddingVertical: SPACING.XS,
+    gap: SPACING.SM,
+  },
+  dateFilterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.MD,
+    paddingVertical: SPACING.SM,
+    borderRadius: RADIUS.MD,
+    borderWidth: 1,
+    borderColor: COLORS.PRIMARY,
+    backgroundColor: COLORS.WHITE,
+    marginRight: SPACING.SM,
+  },
+  dateFilterChipActive: {
+    backgroundColor: COLORS.PRIMARY,
+    borderColor: COLORS.PRIMARY,
+  },
+  dateFilterText: {
+    fontSize: TYPOGRAPHY.SIZES.SM,
+    color: COLORS.PRIMARY,
+    fontWeight: '500',
+  },
+  dateFilterTextActive: {
+    color: COLORS.WHITE,
+  },
+  availabilityFilter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: SPACING.MD,
+    marginTop: SPACING.SM,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.BORDER,
+  },
+  availabilityFilterLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.SM,
+  },
+  availabilityFilterText: {
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    color: COLORS.TEXT,
+    fontWeight: '500',
+  },
+  activeFiltersContainer: {
+    marginTop: SPACING.MD,
+    paddingTop: SPACING.MD,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.BORDER,
+  },
+  activeFiltersLabel: {
+    fontSize: TYPOGRAPHY.SIZES.SM,
+    fontWeight: '600',
+    color: COLORS.TEXT,
+    marginBottom: SPACING.SM,
+  },
+  activeFiltersScroll: {
+    gap: SPACING.SM,
+  },
+  activeFilterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.PRIMARY,
+    paddingHorizontal: SPACING.SM,
+    paddingVertical: SPACING.XS,
+    borderRadius: RADIUS.SM,
+    gap: SPACING.XS,
+  },
+  activeFilterText: {
+    fontSize: TYPOGRAPHY.SIZES.XS,
+    color: COLORS.WHITE,
+    fontWeight: '500',
+  },
+  clearAllFiltersButton: {
+    paddingHorizontal: SPACING.SM,
+    paddingVertical: SPACING.XS,
+    borderRadius: RADIUS.SM,
+    borderWidth: 1,
+    borderColor: COLORS.ERROR,
+    backgroundColor: COLORS.WHITE,
+  },
+  clearAllFiltersText: {
+    fontSize: TYPOGRAPHY.SIZES.XS,
+    color: COLORS.ERROR,
+    fontWeight: '600',
+  },
+  resultsCount: {
+    fontSize: TYPOGRAPHY.SIZES.SM,
+    color: COLORS.TEXT_LIGHT,
+    marginTop: SPACING.MD,
+    textAlign: 'center',
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: COLORS.WHITE,
+    borderTopLeftRadius: RADIUS.XL,
+    borderTopRightRadius: RADIUS.XL,
+    paddingBottom: SPACING.XL,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.LG,
+    paddingVertical: SPACING.MD,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.BORDER,
+  },
+  modalTitle: {
+    fontSize: TYPOGRAPHY.SIZES.LG,
+    fontWeight: '600',
+    color: COLORS.TEXT,
+  },
+  datePickerContent: {
+    paddingHorizontal: SPACING.LG,
+    paddingTop: SPACING.LG,
+  },
+  datePickerLabel: {
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    fontWeight: '600',
+    color: COLORS.TEXT,
+    marginBottom: SPACING.SM,
+  },
+  datePickerButtons: {
+    flexDirection: 'row',
+    gap: SPACING.SM,
+    marginTop: SPACING.LG,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: SPACING.MD,
+    borderRadius: RADIUS.MD,
+    alignItems: 'center',
+  },
+  modalButtonPrimary: {
+    backgroundColor: COLORS.PRIMARY,
+  },
+  modalButtonSecondary: {
+    backgroundColor: COLORS.BACKGROUND,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+  },
+  modalButtonTextPrimary: {
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    fontWeight: '600',
+    color: COLORS.WHITE,
+  },
+  modalButtonTextSecondary: {
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    fontWeight: '600',
+    color: COLORS.TEXT,
   },
 });
 
