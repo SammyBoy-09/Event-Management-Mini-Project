@@ -186,14 +186,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.SURFACE,
+    backgroundColor: COLORS.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.lg,
   },
   header: {
     alignItems: 'center',
-    marginBottom: SPACING.xxxl,
+    marginBottom: SPACING.xxl,
   },
   iconContainer: {
     width: 80,

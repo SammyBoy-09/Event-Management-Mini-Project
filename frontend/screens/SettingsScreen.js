@@ -20,6 +20,7 @@ const SettingsScreen = ({ navigation }) => {
       eventReminders: true,
       eventUpdates: true,
       newEvents: false,
+      adminMessages: true,
     },
     privacy: {
       profileVisible: true,
@@ -29,6 +30,7 @@ const SettingsScreen = ({ navigation }) => {
     app: {
       darkMode: false,
       autoSync: true,
+      offlineMode: false,
     },
   });
 
@@ -84,6 +86,7 @@ const SettingsScreen = ({ navigation }) => {
                 eventReminders: true,
                 eventUpdates: true,
                 newEvents: false,
+                adminMessages: true,
               },
               privacy: {
                 profileVisible: true,
@@ -93,6 +96,7 @@ const SettingsScreen = ({ navigation }) => {
               app: {
                 darkMode: false,
                 autoSync: true,
+                offlineMode: false,
               },
             };
             saveSettings(defaultSettings);
@@ -241,6 +245,14 @@ const SettingsScreen = ({ navigation }) => {
               onValueChange={(value) => updateSetting('notifications', 'newEvents', value)}
               iconName="star"
             />
+            <View style={styles.divider} />
+            <SettingItem
+              title="Admin Messages"
+              subtitle="Important messages from administrators"
+              value={settings.notifications.adminMessages}
+              onValueChange={(value) => updateSetting('notifications', 'adminMessages', value)}
+              iconName="shield-checkmark"
+            />
           </View>
         </View>
 
@@ -294,6 +306,14 @@ const SettingsScreen = ({ navigation }) => {
               value={settings.app.autoSync}
               onValueChange={(value) => updateSetting('app', 'autoSync', value)}
               iconName="sync"
+            />
+            <View style={styles.divider} />
+            <SettingItem
+              title="Offline Mode"
+              subtitle="Save data for offline access"
+              value={settings.app.offlineMode}
+              onValueChange={(value) => updateSetting('app', 'offlineMode', value)}
+              iconName="cloud-offline"
             />
           </View>
         </View>
