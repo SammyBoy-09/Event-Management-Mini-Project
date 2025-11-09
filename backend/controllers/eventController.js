@@ -453,7 +453,7 @@ exports.rsvpEvent = async (req, res) => {
       relatedEvent: event._id
     });
 
-    // Send push notification
+    // Send push notification to attendee
     if (student.expoPushToken) {
       if (event.image) {
         await sendRichPushNotification(
@@ -470,6 +470,39 @@ exports.rsvpEvent = async (req, res) => {
           `You have successfully RSVP'd to "${event.title}". See you on ${new Date(event.date).toLocaleDateString()}!`,
           { eventId: event._id.toString(), type: 'rsvp_confirmation' }
         );
+      }
+    }
+
+    // Notify event creator about new RSVP
+    const creator = await Student.findById(event.createdBy);
+    if (creator && creator._id.toString() !== req.student.id) {
+      // Create in-app notification for creator
+      await Notification.create({
+        recipient: creator._id,
+        type: 'general',
+        title: 'New RSVP',
+        message: `${student.name} has RSVP'd to your event "${event.title}". ${event.currentAttendees}/${event.maxAttendees} attendees.`,
+        relatedEvent: event._id
+      });
+
+      // Send push notification to creator
+      if (creator.expoPushToken) {
+        if (event.image) {
+          await sendRichPushNotification(
+            creator.expoPushToken,
+            '👥 New RSVP',
+            `${student.name} has RSVP'd to your event "${event.title}". ${event.currentAttendees}/${event.maxAttendees} attendees.`,
+            event.image,
+            { eventId: event._id.toString(), type: 'new_rsvp' }
+          );
+        } else {
+          await sendPushNotification(
+            creator.expoPushToken,
+            '👥 New RSVP',
+            `${student.name} has RSVP'd to your event "${event.title}". ${event.currentAttendees}/${event.maxAttendees} attendees.`,
+            { eventId: event._id.toString(), type: 'new_rsvp' }
+          );
+        }
       }
     }
 

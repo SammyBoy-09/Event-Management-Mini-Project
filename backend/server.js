@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const connectDB = require('./config/database');
+const { startReminderJobs } = require('./services/reminderService');
 
 // Load environment variables
 dotenv.config();
@@ -99,6 +100,9 @@ connectDB().then(() => {
     console.log(`🚀 API URL: http://localhost:${PORT}`);
     console.log(`🚀 Network URL: http://192.168.29.217:${PORT}`);
     console.log('🚀 ==========================================');
+    
+    // Start automated reminder cron jobs
+    startReminderJobs();
   });
 }).catch((error) => {
   console.error('Failed to connect to MongoDB:', error);
