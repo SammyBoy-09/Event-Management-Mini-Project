@@ -8,7 +8,8 @@ const {
   changePassword,
   registerAdmin,
   loginAdmin,
-  getAdminProfile
+  getAdminProfile,
+  registerPushToken
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -57,5 +58,10 @@ router.post('/admin/login', loginAdmin);
 // @desc    Get logged in admin profile
 // @access  Private (requires valid JWT token)
 router.get('/admin/profile', protect, getAdminProfile);
+
+// @route   POST /api/auth/register-push-token
+// @desc    Register device push token for notifications
+// @access  Private (requires valid JWT token)
+router.post('/register-push-token', protect, registerPushToken);
 
 module.exports = router;

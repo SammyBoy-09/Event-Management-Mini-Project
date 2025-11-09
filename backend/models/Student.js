@@ -71,6 +71,10 @@ const studentSchema = new mongoose.Schema({
     },
     default: 'student'
   },
+  expoPushToken: {
+    type: String,
+    default: null
+  },
   registeredEvents: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Event'

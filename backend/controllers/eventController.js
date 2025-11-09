@@ -3,6 +3,7 @@ const Student = require('../models/Student');
 const Notification = require('../models/Notification');
 const cloudinary = require('../config/cloudinary');
 const streamifier = require('streamifier');
+const { sendPushNotification, sendRichPushNotification } = require('../services/pushNotificationService');
 
 /**
  * Create a new event
@@ -268,6 +269,26 @@ exports.updateEvent = async (req, res) => {
         }));
       if (notifications.length > 0) {
         await Notification.insertMany(notifications);
+
+        // Send push notifications to all attendees
+        const attendeeIds = event.attendees
+          .filter(att => att.student != null)
+          .map(att => att.student);
+        const attendees = await Student.find({ _id: { $in: attendeeIds } });
+
+        const pushNotifications = attendees
+          .filter(attendee => attendee.expoPushToken)
+          .map(attendee => ({
+            expoPushToken: attendee.expoPushToken,
+            title: '📢 Event Updated',
+            body: `The event "${event.title}" has been updated. Please check the new details.`,
+            data: { eventId: event._id.toString(), type: 'event_update' }
+          }));
+
+        if (pushNotifications.length > 0) {
+          const { sendBulkPushNotifications } = require('../services/pushNotificationService');
+          await sendBulkPushNotifications(pushNotifications);
+        }
       }
     }
 
@@ -307,6 +328,42 @@ exports.deleteEvent = async (req, res) => {
         success: false,
         message: 'Not authorized to delete this event'
       });
+    }
+
+    // Notify all attendees about cancellation before deletion
+    if (event.attendees.length > 0) {
+      const notifications = event.attendees
+        .filter(att => att.student != null)
+        .map(att => ({
+          recipient: att.student,
+          type: 'event_cancelled',
+          title: 'Event Cancelled',
+          message: `The event "${event.title}" has been cancelled.`,
+          relatedEvent: event._id
+        }));
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+
+        // Send push notifications to all attendees
+        const attendeeIds = event.attendees
+          .filter(att => att.student != null)
+          .map(att => att.student);
+        const attendees = await Student.find({ _id: { $in: attendeeIds } });
+
+        const pushNotifications = attendees
+          .filter(attendee => attendee.expoPushToken)
+          .map(attendee => ({
+            expoPushToken: attendee.expoPushToken,
+            title: '❌ Event Cancelled',
+            body: `The event "${event.title}" has been cancelled.`,
+            data: { eventId: event._id.toString(), type: 'event_cancelled' }
+          }));
+
+        if (pushNotifications.length > 0) {
+          const { sendBulkPushNotifications } = require('../services/pushNotificationService');
+          await sendBulkPushNotifications(pushNotifications);
+        }
+      }
     }
 
     await event.deleteOne();
@@ -383,9 +440,9 @@ exports.rsvpEvent = async (req, res) => {
     await event.save();
 
     // Add event to student's registeredEvents
-    await Student.findByIdAndUpdate(req.student.id, {
+    const student = await Student.findByIdAndUpdate(req.student.id, {
       $addToSet: { registeredEvents: event._id }
-    });
+    }, { new: true });
 
     // Create notification
     await Notification.create({
@@ -395,6 +452,26 @@ exports.rsvpEvent = async (req, res) => {
       message: `You have successfully RSVP'd to "${event.title}". See you on ${new Date(event.date).toLocaleDateString()}!`,
       relatedEvent: event._id
     });
+
+    // Send push notification
+    if (student.expoPushToken) {
+      if (event.image) {
+        await sendRichPushNotification(
+          student.expoPushToken,
+          'RSVP Confirmed',
+          `You have successfully RSVP'd to "${event.title}". See you on ${new Date(event.date).toLocaleDateString()}!`,
+          event.image,
+          { eventId: event._id.toString(), type: 'rsvp_confirmation' }
+        );
+      } else {
+        await sendPushNotification(
+          student.expoPushToken,
+          'RSVP Confirmed',
+          `You have successfully RSVP'd to "${event.title}". See you on ${new Date(event.date).toLocaleDateString()}!`,
+          { eventId: event._id.toString(), type: 'rsvp_confirmation' }
+        );
+      }
+    }
 
     res.status(200).json({
       success: true,
@@ -490,6 +567,9 @@ exports.approveEvent = async (req, res) => {
     event.approvedAt = new Date();
     await event.save();
 
+    // Get event creator to send push notification
+    const creator = await Student.findById(event.createdBy);
+
     // Notify event creator
     await Notification.create({
       recipient: event.createdBy,
@@ -498,6 +578,26 @@ exports.approveEvent = async (req, res) => {
       message: `Your event "${event.title}" has been approved and is now live!`,
       relatedEvent: event._id
     });
+
+    // Send push notification
+    if (creator && creator.expoPushToken) {
+      if (event.image) {
+        await sendRichPushNotification(
+          creator.expoPushToken,
+          '🎉 Event Approved',
+          `Your event "${event.title}" has been approved and is now live!`,
+          event.image,
+          { eventId: event._id.toString(), type: 'event_approval' }
+        );
+      } else {
+        await sendPushNotification(
+          creator.expoPushToken,
+          '🎉 Event Approved',
+          `Your event "${event.title}" has been approved and is now live!`,
+          { eventId: event._id.toString(), type: 'event_approval' }
+        );
+      }
+    }
 
     res.status(200).json({
       success: true,
@@ -539,6 +639,9 @@ exports.rejectEvent = async (req, res) => {
     event.status = 'rejected';
     await event.save();
 
+    // Get event creator to send push notification
+    const creator = await Student.findById(event.createdBy);
+
     // Notify event creator
     await Notification.create({
       recipient: event.createdBy,
@@ -547,6 +650,26 @@ exports.rejectEvent = async (req, res) => {
       message: `Your event "${event.title}" has been rejected. ${req.body.reason || ''}`,
       relatedEvent: event._id
     });
+
+    // Send push notification
+    if (creator && creator.expoPushToken) {
+      if (event.image) {
+        await sendRichPushNotification(
+          creator.expoPushToken,
+          '❌ Event Rejected',
+          `Your event "${event.title}" has been rejected. ${req.body.reason || ''}`,
+          event.image,
+          { eventId: event._id.toString(), type: 'event_rejection' }
+        );
+      } else {
+        await sendPushNotification(
+          creator.expoPushToken,
+          '❌ Event Rejected',
+          `Your event "${event.title}" has been rejected. ${req.body.reason || ''}`,
+          { eventId: event._id.toString(), type: 'event_rejection' }
+        );
+      }
+    }
 
     res.status(200).json({
       success: true,
@@ -627,6 +750,27 @@ exports.updateEventStatus = async (req, res) => {
         message: notificationMessage,
         relatedEvent: event._id
       });
+
+      // Send push notification
+      const creator = await Student.findById(event.createdBy);
+      if (creator && creator.expoPushToken) {
+        if (event.image) {
+          await sendRichPushNotification(
+            creator.expoPushToken,
+            'Event Status Updated',
+            notificationMessage,
+            event.image,
+            { eventId: event._id.toString(), type: notificationType }
+          );
+        } else {
+          await sendPushNotification(
+            creator.expoPushToken,
+            'Event Status Updated',
+            notificationMessage,
+            { eventId: event._id.toString(), type: notificationType }
+          );
+        }
+      }
     }
 
     res.status(200).json({

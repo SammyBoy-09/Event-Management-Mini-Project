@@ -614,3 +614,59 @@ exports.getAdminProfile = async (req, res) => {
     });
   }
 };
+
+/**
+ * @route   POST /api/auth/register-push-token
+ * @desc    Register device push token for notifications
+ * @access  Private (requires JWT token)
+ */
+exports.registerPushToken = async (req, res) => {
+  try {
+    const { expoPushToken } = req.body;
+
+    if (!expoPushToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'Push token is required'
+      });
+    }
+
+    // Validate Expo push token format
+    if (!expoPushToken.startsWith('ExponentPushToken[') && !expoPushToken.startsWith('ExpoPushToken[')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid Expo push token format'
+      });
+    }
+
+    // Update student's push token
+    const student = await Student.findByIdAndUpdate(
+      req.user.id,
+      { expoPushToken },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Push token registered successfully',
+      data: {
+        expoPushToken: student.expoPushToken
+      }
+    });
+
+  } catch (error) {
+    console.error('Register push token error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while registering push token',
+      error: error.message
+    });
+  }
+};

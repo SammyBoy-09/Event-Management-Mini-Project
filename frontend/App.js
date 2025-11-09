@@ -7,7 +7,7 @@ if (typeof global.TextDecoder === 'undefined') {
   global.TextDecoder = TextDecoder;
 }
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Provider as PaperProvider } from 'react-native-paper';
@@ -39,6 +39,14 @@ import LoadingSpinner from './components/LoadingSpinner';
 // API
 import { getAuthData } from './api/api';
 
+// Push Notifications
+import {
+  registerForPushNotificationsAsync,
+  sendPushTokenToBackend,
+  addNotificationReceivedListener,
+  addNotificationResponseListener,
+} from './utils/pushNotifications';
+
 const Stack = createStackNavigator();
 
 /**
@@ -48,9 +56,23 @@ const Stack = createStackNavigator();
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const notificationListener = useRef();
+  const responseListener = useRef();
+  const navigationRef = useRef();
 
   useEffect(() => {
     checkAuthStatus();
+    setupPushNotifications();
+
+    // Cleanup listeners on unmount
+    return () => {
+      if (notificationListener.current) {
+        notificationListener.current.remove();
+      }
+      if (responseListener.current) {
+        responseListener.current.remove();
+      }
+    };
   }, []);
 
   /**
@@ -69,13 +91,49 @@ export default function App() {
     }
   };
 
+  /**
+   * Setup push notifications
+   */
+  const setupPushNotifications = async () => {
+    try {
+      // Register for push notifications
+      const token = await registerForPushNotificationsAsync();
+      
+      if (token) {
+        // Check if user is authenticated before sending token
+        const { token: authToken } = await getAuthData();
+        if (authToken) {
+          await sendPushTokenToBackend(token);
+        }
+      }
+
+      // Listen for notifications when app is in foreground
+      notificationListener.current = addNotificationReceivedListener((notification) => {
+        console.log('Notification received:', notification);
+      });
+
+      // Listen for notification taps
+      responseListener.current = addNotificationResponseListener((response) => {
+        const data = response.notification.request.content.data;
+        console.log('Notification tapped:', data);
+
+        // Navigate to event details if eventId is present
+        if (data.eventId && navigationRef.current) {
+          navigationRef.current.navigate('EventDetails', { eventId: data.eventId });
+        }
+      });
+    } catch (error) {
+      console.error('Error setting up push notifications:', error);
+    }
+  };
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
 
   return (
     <PaperProvider>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <StatusBar style="auto" />
         <Stack.Navigator
           initialRouteName={isAuthenticated ? 'Dashboard' : 'AuthLanding'}
