@@ -275,8 +275,8 @@ const EventDetailsScreen = ({ route, navigation }) => {
       
       {/* Footer Actions */}
       <View style={styles.footer}>
-        {/* Admin/Creator Actions */}
-        {canEdit && event.currentAttendees > 0 && (
+        {/* Admin-Only Actions */}
+        {isAdmin && event.currentAttendees > 0 && (
           <TouchableOpacity 
             style={styles.viewAttendeesButton}
             onPress={() => navigation.navigate('Attendance', { 
