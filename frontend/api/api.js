@@ -170,6 +170,19 @@ export const changePassword = async (passwords) => {
   }
 };
 
+// Logout user (clear local storage)
+export const logout = async () => {
+  try {
+    // Clear user data from AsyncStorage
+    await AsyncStorage.removeItem('userToken');
+    await AsyncStorage.removeItem('userData');
+    return { success: true, message: 'Logged out successfully' };
+  } catch (error) {
+    console.error('Logout error:', error);
+    throw { message: 'Failed to logout' };
+  }
+};
+
 /**
  * Event API Methods
  */
