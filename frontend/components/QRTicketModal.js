@@ -120,7 +120,7 @@ const QRTicketModal = ({
             <View style={styles.ticketContainer} ref={qrRef} collapsable={false}>
               {/* Ticket Header */}
               <View style={styles.ticketHeader}>
-                <Ionicons name="ticket" size={32} color={COLORS.primary} />
+                <Ionicons name="pricetag" size={32} color={COLORS.primary} />
                 <Text style={styles.ticketBrand}>CampusConnect</Text>
               </View>
 
