@@ -731,13 +731,19 @@ const DashboardScreen = ({ navigation }) => {
           visible={showDatePicker}
           transparent={true}
           animationType="slide"
-          onRequestClose={() => setShowDatePicker(false)}
+          onRequestClose={() => {
+            setShowDatePicker(false);
+            setDatePickerMode('start');
+          }}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Select Date Range</Text>
-                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                <TouchableOpacity onPress={() => {
+                  setShowDatePicker(false);
+                  setDatePickerMode('start');
+                }}>
                   <Ionicons name="close" size={24} color={COLORS.text} />
                 </TouchableOpacity>
               </View>
@@ -751,21 +757,20 @@ const DashboardScreen = ({ navigation }) => {
                   value={
                     datePickerMode === 'start' 
                       ? (customDateRange.start || new Date())
-                      : (customDateRange.end || new Date())
+                      : (customDateRange.end || customDateRange.start || new Date())
                   }
                   mode="date"
                   display="spinner"
                   onChange={(event, selectedDate) => {
-                    if (selectedDate) {
+                    if (event.type === 'set' && selectedDate) {
                       if (datePickerMode === 'start') {
                         setCustomDateRange({ ...customDateRange, start: selectedDate });
-                        setDatePickerMode('end');
                       } else {
                         setCustomDateRange({ ...customDateRange, end: selectedDate });
                       }
                     }
                   }}
-                  minimumDate={datePickerMode === 'start' ? new Date() : customDateRange.start}
+                  minimumDate={datePickerMode === 'start' ? new Date() : (customDateRange.start || new Date())}
                 />
 
                 <View style={styles.datePickerButtons}>
@@ -782,11 +787,25 @@ const DashboardScreen = ({ navigation }) => {
                     style={[styles.modalButton, styles.modalButtonPrimary]}
                     onPress={() => {
                       if (datePickerMode === 'start') {
+                        if (!customDateRange.start) {
+                          Alert.alert('Error', 'Please select a start date');
+                          return;
+                        }
+                        // Initialize end date to start date if not set
+                        if (!customDateRange.end) {
+                          setCustomDateRange({ ...customDateRange, end: customDateRange.start });
+                        }
                         setDatePickerMode('end');
                       } else {
                         if (customDateRange.start && customDateRange.end) {
+                          // Ensure end date is not before start date
+                          if (customDateRange.end < customDateRange.start) {
+                            Alert.alert('Error', 'End date cannot be before start date');
+                            return;
+                          }
                           setDateFilter('Custom');
                           setShowDatePicker(false);
+                          setShowSearchModal(false); // Close search modal too
                         } else {
                           Alert.alert('Error', 'Please select both start and end dates');
                         }
