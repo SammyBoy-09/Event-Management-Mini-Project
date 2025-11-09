@@ -242,14 +242,18 @@ exports.updateEvent = async (req, res) => {
 
     // Notify all attendees about update
     if (event.attendees.length > 0) {
-      const notifications = event.attendees.map(att => ({
-        recipient: att.student,
-        type: 'event_update',
-        title: 'Event Updated',
-        message: `The event "${event.title}" has been updated. Please check the new details.`,
-        relatedEvent: event._id
-      }));
-      await Notification.insertMany(notifications);
+      const notifications = event.attendees
+        .filter(att => att.student != null) // Filter out null student references
+        .map(att => ({
+          recipient: att.student,
+          type: 'event_update',
+          title: 'Event Updated',
+          message: `The event "${event.title}" has been updated. Please check the new details.`,
+          relatedEvent: event._id
+        }));
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+      }
     }
 
     res.status(200).json({
@@ -721,9 +725,12 @@ exports.getEventAttendees = async (req, res) => {
       });
     }
 
+    // Filter out attendees with null student references
+    const validAttendees = event.attendees.filter(a => a.student != null);
+
     // Calculate attendance statistics
-    const totalRSVPs = event.attendees.length;
-    const attendedCount = event.attendees.filter(a => a.attended).length;
+    const totalRSVPs = validAttendees.length;
+    const attendedCount = validAttendees.filter(a => a.attended).length;
     const pendingCount = totalRSVPs - attendedCount;
     const attendanceRate = totalRSVPs > 0 ? ((attendedCount / totalRSVPs) * 100).toFixed(1) : 0;
 
@@ -738,7 +745,7 @@ exports.getEventAttendees = async (req, res) => {
           location: event.location,
           status: event.status
         },
-        attendees: event.attendees,
+        attendees: validAttendees,
         statistics: {
           totalRSVPs,
           attendedCount,
