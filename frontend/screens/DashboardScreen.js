@@ -166,7 +166,10 @@ const DashboardScreen = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             await AsyncStorage.clear();
-            navigation.replace('Login');
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'AuthLanding' }],
+            });
           },
         },
       ]
