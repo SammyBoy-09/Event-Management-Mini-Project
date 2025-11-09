@@ -20,9 +20,14 @@ const StudentRegisterScreen = ({ navigation }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    studentId: '',
+    usn: '',
     password: '',
     confirmPassword: '',
+    year: '',
+    semester: '',
+    phone: '',
+    gender: '',
+    department: '',
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -51,8 +56,30 @@ const StudentRegisterScreen = ({ navigation }) => {
       newErrors.email = 'Email is invalid';
     }
 
-    if (!formData.studentId.trim()) {
-      newErrors.studentId = 'Student ID is required';
+    if (!formData.usn.trim()) {
+      newErrors.usn = 'USN is required';
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^[0-9]{10}$/.test(formData.phone.trim())) {
+      newErrors.phone = 'Phone must be 10 digits';
+    }
+
+    if (!formData.department.trim()) {
+      newErrors.department = 'Department is required';
+    }
+
+    if (!formData.year) {
+      newErrors.year = 'Year is required';
+    }
+
+    if (!formData.semester) {
+      newErrors.semester = 'Semester is required';
+    }
+
+    if (!formData.gender) {
+      newErrors.gender = 'Gender is required';
     }
 
     if (!formData.password) {
@@ -80,8 +107,13 @@ const StudentRegisterScreen = ({ navigation }) => {
       const response = await registerStudent({
         name: formData.name.trim(),
         email: formData.email.toLowerCase().trim(),
-        studentId: formData.studentId.trim(),
+        usn: formData.usn.trim().toUpperCase(),
         password: formData.password,
+        year: parseInt(formData.year),
+        semester: parseInt(formData.semester),
+        phone: formData.phone.trim(),
+        gender: formData.gender,
+        department: formData.department.trim(),
       });
 
       if (response.success) {
@@ -164,14 +196,111 @@ const StudentRegisterScreen = ({ navigation }) => {
           />
 
           <InputField
-            label="Student ID"
-            placeholder="Enter your student ID"
-            value={formData.studentId}
-            onChangeText={(value) => handleChange('studentId', value)}
-            error={errors.studentId}
+            label="USN"
+            placeholder="Enter your USN"
+            value={formData.usn}
+            onChangeText={(value) => handleChange('usn', value)}
+            error={errors.usn}
             icon="card-outline"
             autoCapitalize="characters"
           />
+
+          <InputField
+            label="Phone Number"
+            placeholder="Enter 10-digit phone number"
+            value={formData.phone}
+            onChangeText={(value) => handleChange('phone', value)}
+            error={errors.phone}
+            keyboardType="phone-pad"
+            icon="call-outline"
+            maxLength={10}
+          />
+
+          <InputField
+            label="Department"
+            placeholder="e.g., Computer Science"
+            value={formData.department}
+            onChangeText={(value) => handleChange('department', value)}
+            error={errors.department}
+            icon="school-outline"
+            autoCapitalize="words"
+          />
+
+          <View style={styles.row}>
+            <View style={styles.halfWidth}>
+              <InputField
+                label="Year"
+                placeholder="1-4"
+                value={formData.year}
+                onChangeText={(value) => handleChange('year', value)}
+                error={errors.year}
+                keyboardType="number-pad"
+                icon="calendar-outline"
+                maxLength={1}
+              />
+            </View>
+            <View style={styles.halfWidth}>
+              <InputField
+                label="Semester"
+                placeholder="1-8"
+                value={formData.semester}
+                onChangeText={(value) => handleChange('semester', value)}
+                error={errors.semester}
+                keyboardType="number-pad"
+                icon="calendar-outline"
+                maxLength={1}
+              />
+            </View>
+          </View>
+
+          <View style={styles.genderContainer}>
+            <Text style={styles.genderLabel}>Gender</Text>
+            <View style={styles.genderButtons}>
+              <TouchableOpacity
+                style={[
+                  styles.genderButton,
+                  formData.gender === 'Male' && styles.genderButtonActive
+                ]}
+                onPress={() => handleChange('gender', 'Male')}
+              >
+                <Text style={[
+                  styles.genderButtonText,
+                  formData.gender === 'Male' && styles.genderButtonTextActive
+                ]}>
+                  Male
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.genderButton,
+                  formData.gender === 'Female' && styles.genderButtonActive
+                ]}
+                onPress={() => handleChange('gender', 'Female')}
+              >
+                <Text style={[
+                  styles.genderButtonText,
+                  formData.gender === 'Female' && styles.genderButtonTextActive
+                ]}>
+                  Female
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.genderButton,
+                  formData.gender === 'Other' && styles.genderButtonActive
+                ]}
+                onPress={() => handleChange('gender', 'Other')}
+              >
+                <Text style={[
+                  styles.genderButtonText,
+                  formData.gender === 'Other' && styles.genderButtonTextActive
+                ]}>
+                  Other
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
+          </View>
 
           <InputField
             label="Password"
@@ -338,6 +467,54 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 18,
     opacity: 0.8,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: SPACING.md,
+  },
+  halfWidth: {
+    flex: 1,
+  },
+  genderContainer: {
+    marginBottom: SPACING.md,
+  },
+  genderLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.TEXT,
+    marginBottom: SPACING.sm,
+  },
+  genderButtons: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
+  genderButton: {
+    flex: 1,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    backgroundColor: COLORS.WHITE,
+    alignItems: 'center',
+  },
+  genderButtonActive: {
+    backgroundColor: COLORS.PRIMARY,
+    borderColor: COLORS.PRIMARY,
+  },
+  genderButtonText: {
+    fontSize: 14,
+    color: COLORS.TEXT,
+    fontWeight: '500',
+  },
+  genderButtonTextActive: {
+    color: COLORS.WHITE,
+  },
+  errorText: {
+    fontSize: 12,
+    color: COLORS.ERROR,
+    marginTop: SPACING.xs,
   },
 });
 
