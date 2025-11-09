@@ -302,36 +302,38 @@ const EventDetailsScreen = ({ route, navigation }) => {
           </TouchableOpacity>
         )}
 
-        {/* Student RSVP Actions */}
-        {event.hasRSVP ? (
-          <View style={styles.footerButtons}>
-            <Button
-              title="View QR Ticket"
-              onPress={() => {
-                console.log('View QR Ticket button pressed');
-                console.log('Current showQRTicket state:', showQRTicket);
-                setShowQRTicket(true);
-                console.log('setShowQRTicket(true) called');
-              }}
-              variant="primary"
-              style={styles.footerButton}
-              icon="qr-code"
-            />
-            <Button
-              title="Cancel RSVP"
-              onPress={handleRSVP}
-              variant="outline"
-              style={styles.footerButton}
-            />
-          </View>
-        ) : (
-          !canEdit && (
-            <Button
-              title="RSVP Now"
-              onPress={handleRSVP}
-              variant="primary"
-              disabled={event.currentAttendees >= event.maxAttendees}
-            />
+        {/* Student RSVP Actions - Only for approved events */}
+        {event.status === 'approved' && (
+          event.hasRSVP ? (
+            <View style={styles.footerButtons}>
+              <Button
+                title="View QR Ticket"
+                onPress={() => {
+                  console.log('View QR Ticket button pressed');
+                  console.log('Current showQRTicket state:', showQRTicket);
+                  setShowQRTicket(true);
+                  console.log('setShowQRTicket(true) called');
+                }}
+                variant="primary"
+                style={styles.footerButton}
+                icon="qr-code"
+              />
+              <Button
+                title="Cancel RSVP"
+                onPress={handleRSVP}
+                variant="outline"
+                style={styles.footerButton}
+              />
+            </View>
+          ) : (
+            !canEdit && (
+              <Button
+                title="RSVP Now"
+                onPress={handleRSVP}
+                variant="primary"
+                disabled={event.currentAttendees >= event.maxAttendees}
+              />
+            )
           )
         )}
       </View>
