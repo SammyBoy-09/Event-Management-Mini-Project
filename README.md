@@ -1,103 +1,530 @@
 # 🎓 CampusConnect Event Management App
 
-A full-stack student login/register system built with React Native (frontend) and Node.js + Express + MongoDB (backend).
+A comprehensive full-stack event management system designed for college campuses, built with React Native (Expo) and Node.js + Express + MongoDB. Features include event creation, RSVP management, push notifications, QR code tickets, admin approval system, and real-time updates.
 
-![CampusConnect](https://img.shields.io/badge/React%20Native-0.72-blue)
+![React Native](https://img.shields.io/badge/React%20Native-Expo-blue)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-green)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-brightgreen)
+![Push Notifications](https://img.shields.io/badge/Push-Notifications-orange)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ## 📋 Table of Contents
 
 - [Features](#features)
 - [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Libraries & Dependencies](#libraries--dependencies)
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Running the Application](#running-the-application)
 - [API Documentation](#api-documentation)
-- [Screenshots](#screenshots)
-- [Future Enhancements](#future-enhancements)
+- [Production Build](#production-build)
 - [Contributing](#contributing)
 - [License](#license)
 
 ## ✨ Features
 
-### 🎨 Frontend Features
-- **Landing Page** with animated feature showcase
-- **Student Registration** with comprehensive form validation
-- **Student Login** with JWT authentication
-- **Event Dashboard** with category filters and RSVP
-- **Event Creation** with date/time pickers and validation
-- **Event Details** with share and directions functionality
-- **Notifications System** with real-time updates
-- **User Profile** with edit and password change
-- **Auto-login** using AsyncStorage
-- **Beautiful UI** with modern color palette
-- **Form Validation** (email format, password strength, phone number)
-- **Loading States** and error handling
-- **Responsive Design** for all screen sizes
-- **Pull-to-Refresh** on all list screens
+### 🎨 Frontend Features (React Native + Expo)
 
-### 🖥️ Backend Features
-- **RESTful API** with Express.js (22+ endpoints)
-- **MongoDB** integration with Mongoose (3 models)
-- **JWT Authentication** with 30-day token expiration
-- **Password Hashing** using bcryptjs
-- **Event Management** (CRUD operations)
-- **RSVP System** with attendee tracking
-- **Notification System** with multiple types
-- **Role-Based Access Control** (Student, CR, Admin)
-- **Input Validation** and error handling
-- **CORS** enabled for cross-origin requests
-- **Protected Routes** with JWT middleware
-- **Comprehensive Error Messages**
+**Authentication & Authorization**
+- 📱 Student registration with comprehensive validation
+- 🔐 Separate login for Students, Class Representatives (CR), and Admins
+- 🔑 JWT token-based authentication with AsyncStorage
+- 🚪 Auto-login on app restart
+- 🔒 Secure password change functionality
+
+**Event Management**
+- 📋 Browse all approved events with pull-to-refresh
+- 🔍 Search events by title, description, or organizer
+- 🏷️ Filter by category (Technical, Cultural, Sports, Workshop, etc.)
+- 📅 Calendar view with visual event markers
+- 📝 Create events with image upload, date/time pickers
+- ✏️ Edit/delete own created events
+- ✅ RSVP to events with capacity tracking
+- ❌ Cancel RSVP before event
+- 👥 View attendee lists
+- 📊 "My Events" - Track created events and RSVPs
+
+**Push Notifications**
+- 🔔 Automated event reminders (24 hours and 1 hour before)
+- 📣 New event notifications
+- ✅ Event approval/rejection alerts
+- 📢 Event update notifications
+- 🔕 In-app notification center with read/unread status
+
+**QR Code System**
+- 🎟️ Generate QR code tickets for registered events
+- 📸 Scan QR codes for attendance marking (Admin/CR)
+- ✨ Visual ticket modal with event details
+
+**User Profile**
+- 👤 View and edit profile information
+- 📞 Update contact details
+- 🔐 Change password securely
+- 🔔 Manage push notification tokens
+
+**Admin/CR Panel**
+- ⚡ Event approval dashboard
+- ✅ Approve pending events
+- ❌ Reject events with reason
+- 📊 Event statistics (pending, approved, rejected)
+- 📸 QR scanner for attendance
+- 👥 View all registered users
+
+**UI/UX**
+- 🎨 Modern, polished interface with consistent theme
+- 🌈 Centralized color palette and typography
+- 💫 Smooth animations and transitions
+- ⏳ Loading states with ActivityIndicator
+- ❗ User-friendly error messages
+- 📱 Responsive design for all screen sizes
+- 🔄 Pull-to-refresh on all list screens
+- 🖼️ Image preview and caching
+
+**Sharing & Integration**
+- 📤 Share event details via native share sheet
+- 🗺️ Open event location in Maps app
+- 📧 Contact organizer via email/phone
+
+### 🖥️ Backend Features (Node.js + Express + MongoDB)
+
+**API & Architecture**
+- ⚡ RESTful API with 35+ endpoints
+- 🏗️ MVC architecture (Models, Controllers, Routes)
+- 🔐 JWT middleware for protected routes
+- 🛡️ Role-based access control (Student, CR, Admin)
+- ✅ Comprehensive input validation
+- ❌ Centralized error handling
+- 🌐 CORS enabled for cross-origin requests
+
+**Database (MongoDB Atlas)**
+- 📊 3 main collections (Students, Events, Notifications)
+- 🔗 Mongoose ODM with schema validation
+- 🔍 Indexed fields for faster queries
+- 🗑️ Auto-delete old notifications (30 days TTL)
+- 📈 Population for referenced documents
+
+**Authentication & Security**
+- 🔐 bcryptjs password hashing (10 salt rounds)
+- 🎫 JWT token generation and verification
+- ⏰ 30-day token expiration
+- 🚫 Protected routes with auth middleware
+- 👤 Role-based authorization checks
+
+**Event Management System**
+- ✍️ CRUD operations for events
+- 🔄 Event approval workflow (pending → approved/rejected)
+- 👥 RSVP management with capacity tracking
+- 🚫 Prevent double RSVPs
+- ✅ Only admins/CRs can approve events
+- 🔔 Notifications on event status changes
+
+**Push Notification Service**
+- 📱 Expo Push Notifications integration
+- 🤖 Automated reminders via cron jobs
+- ⏰ Hourly cron job checks upcoming events
+- 📬 Send notifications to all event attendees
+- 🔕 Handle invalid/expired push tokens
+
+**Cron Job Scheduler**
+- ⏱️ Runs every hour (0 * * * *)
+- 🔍 Checks events in next 24 hours and 1 hour
+- 📤 Sends push notifications via Expo
+- ✅ Tracks sent reminders (prevents duplicates)
+- 📊 Logs notification sending status
+
+**Image Upload (Cloudinary)**
+- 📸 Multer middleware for file handling
+- ☁️ Cloudinary CDN for image storage
+- 🖼️ Image optimization and transformation
+- 🔗 Returns CDN URL for database storage
+
+**Notification System**
+- 📬 In-app notification creation
+- 🔔 Push notification sending
+- 📊 Track read/unread status
+- 🗑️ Auto-delete after 30 days
+- 🔍 Query by user and read status
+
+**Deployment (Render)**
+- 🌐 Hosted on Render.com
+- 🔄 Auto-deploy on git push
+- 📊 Environment variable management
+- 📈 Health check endpoints
+- 🚀 Production-ready configuration
 
 ## 🧩 Tech Stack
 
 ### Frontend
-- **React Native** - Cross-platform mobile framework
-- **Expo** - Development platform
-- **React Navigation** - Navigation library
-- **React Native Paper** - UI component library
-- **Axios** - HTTP client
-- **AsyncStorage** - Local storage
-- **Expo Vector Icons** - Icon library
+- **React Native** (0.72+) - Cross-platform mobile framework
+- **Expo** (SDK 49+) - Development platform and build tool
+- **React Navigation** (v6) - Stack, tab, and drawer navigation
+- **Axios** - HTTP client for API calls
+- **AsyncStorage** - Persistent local storage
+- **Expo Vector Icons** - 10,000+ icons (Ionicons)
+- **Expo Notifications** - Push notification handling
+- **Expo Image Picker** - Camera and gallery access
+- **React Native Modal** - Custom modal components
+- **Date/Time Pickers** - Native date/time selection
 
 ### Backend
-- **Node.js** - JavaScript runtime
-- **Express.js** - Web framework
-- **MongoDB Atlas** - Cloud database
-- **Mongoose** - ODM for MongoDB
-- **JWT** - JSON Web Tokens for authentication
-- **bcryptjs** - Password hashing
-- **dotenv** - Environment variables
+- **Node.js** (18+) - JavaScript runtime
+- **Express.js** (4.18+) - Web application framework
+- **MongoDB Atlas** - Cloud NoSQL database
+- **Mongoose** (7.0+) - MongoDB object modeling
+- **Render** - Backend hosting platform (deployed)
+- **jsonwebtoken** - JWT generation and verification
+- **bcryptjs** - Password hashing with salt
+- **dotenv** - Environment variable management
 - **cors** - Cross-Origin Resource Sharing
-- **body-parser** - Request body parsing
+- **multer** - Multipart form-data handling
+- **cloudinary** - Cloud image storage and CDN
+- **expo-server-sdk** - Push notification sending
+- **node-cron** - Scheduled task automation
+
+### Cloud Services
+- **MongoDB Atlas** - Database hosting
+- **Render** - Backend API hosting
+- **Cloudinary** - Image CDN and storage
+- **Expo** - Push notifications and app builds
+
+## 🏗️ Architecture
+
+### System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Mobile Application                      │
+│                    (React Native + Expo)                    │
+├─────────────────────────────────────────────────────────────┤
+│  Screens  │  Components  │  Navigation  │  API Client       │
+└─────────────────────┬───────────────────────────────────────┘
+                      │ HTTP/HTTPS (Axios)
+                      │ JWT Auth Headers
+                      ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Backend API Server                        │
+│                 (Node.js + Express.js)                      │
+├─────────────────────────────────────────────────────────────┤
+│  Routes  │  Controllers  │  Middleware  │  Services         │
+└─────┬───────────┬───────────────┬────────────────┬──────────┘
+      │           │               │                │
+      ▼           ▼               ▼                ▼
+┌─────────┐ ┌──────────┐  ┌─────────────┐  ┌─────────────┐
+│ MongoDB │ │Cloudinary│  │Expo Push API│  │  Cron Jobs  │
+│  Atlas  │ │  (CDN)   │  │(Notif. Send)│  │ (Scheduler) │
+└─────────┘ └──────────┘  └─────────────┘  └─────────────┘
+```
+
+### Data Flow
+
+**Authentication Flow:**
+1. User registers/logs in → Frontend sends credentials
+2. Backend validates → Generates JWT token
+3. Token stored in AsyncStorage
+4. All subsequent requests include JWT in headers
+5. Middleware verifies token before processing
+
+**Event Creation Flow:**
+1. User fills event form → Image picked from gallery
+2. Image uploaded to Cloudinary → URL received
+3. Event data + image URL → Backend API
+4. Event saved to MongoDB with "pending" status
+5. Admin receives notification for approval
+6. Upon approval → All users receive push notification
+
+**Push Notification Flow:**
+1. User grants notification permissions → Expo token generated
+2. Token sent to backend → Stored in user profile
+3. Cron job runs hourly → Checks upcoming events
+4. Notifications sent via Expo Push API → User devices receive
+
+### Database Schemas
+
+#### Student/User Schema
+```javascript
+{
+  _id: ObjectId,                    // MongoDB auto-generated ID
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true
+  },
+  password: {
+    type: String,
+    required: true,
+    minlength: 6                    // Hashed with bcryptjs
+  },
+  phone: {
+    type: String,
+    required: true
+  },
+  department: {
+    type: String,
+    required: true
+  },
+  year: {
+    type: String,
+    required: true                  // 1, 2, 3, 4
+  },
+  rollNumber: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  role: {
+    type: String,
+    enum: ['student', 'cr', 'admin'],
+    default: 'student'
+  },
+  expoPushToken: {
+    type: String,                   // Expo push notification token
+    default: null
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+}
+```
+
+#### Event Schema
+```javascript
+{
+  _id: ObjectId,
+  title: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 200
+  },
+  description: {
+    type: String,
+    required: true,
+    minlength: 20
+  },
+  category: {
+    type: String,
+    required: true,
+    enum: ['Technical', 'Cultural', 'Sports', 'Workshop', 'Seminar', 'Competition', 'Other']
+  },
+  date: {
+    type: Date,
+    required: true
+  },
+  time: {
+    type: String,
+    required: true                  // Format: "10:00 AM"
+  },
+  location: {
+    type: String,
+    required: true
+  },
+  organizer: {
+    type: String,
+    required: true
+  },
+  capacity: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+  image: {
+    type: String,                   // Cloudinary URL
+    default: null
+  },
+  attendees: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student'
+  }],
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student',
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  rejectionReason: {
+    type: String,
+    default: null
+  },
+  remindersSent: {
+    day: { type: Boolean, default: false },    // 24h reminder sent
+    hour: { type: Boolean, default: false }    // 1h reminder sent
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+}
+```
+
+#### Notification Schema
+```javascript
+{
+  _id: ObjectId,
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student',
+    required: true
+  },
+  title: {
+    type: String,
+    required: true
+  },
+  message: {
+    type: String,
+    required: true
+  },
+  type: {
+    type: String,
+    enum: ['event_approved', 'event_rejected', 'event_reminder', 'event_updated', 'new_event', 'rsvp_confirmation'],
+    required: true
+  },
+  event: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Event',
+    default: null
+  },
+  read: {
+    type: Boolean,
+    default: false
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    expires: 2592000                // Auto-delete after 30 days
+  }
+}
+```
+
+**Indexes:**
+- `Student`: email (unique), rollNumber (unique)
+- `Event`: date, status, category, createdBy
+- `Notification`: user, createdAt, read
+
+## 📚 Libraries & Dependencies
+
+### Frontend Dependencies
+```json
+{
+  "@react-navigation/native": "^6.1.7",
+  "@react-navigation/stack": "^6.3.17",
+  "@react-navigation/bottom-tabs": "^6.5.8",
+  "axios": "^1.4.0",
+  "expo": "~49.0.0",
+  "expo-image-picker": "~14.3.2",
+  "expo-notifications": "~0.20.1",
+  "react": "18.2.0",
+  "react-native": "0.72.3",
+  "react-native-modal": "^13.0.1",
+  "@react-native-async-storage/async-storage": "1.18.2",
+  "@expo/vector-icons": "^13.0.0"
+}
+```
+
+### Backend Dependencies
+```json
+{
+  "express": "^4.18.2",
+  "mongoose": "^7.0.0",
+  "bcryptjs": "^2.4.3",
+  "jsonwebtoken": "^9.0.0",
+  "dotenv": "^16.0.3",
+  "cors": "^2.8.5",
+  "multer": "^1.4.5-lts.1",
+  "cloudinary": "^1.37.3",
+  "expo-server-sdk": "^3.7.0",
+  "node-cron": "^3.0.2"
+}
+```
 
 ## 📁 Project Structure
 
 ```
 app2/
-├── backend/
+├── backend/                      # Node.js Backend
 │   ├── config/
-│   │   └── database.js          # MongoDB connection
+│   │   └── database.js          # MongoDB connection setup
 │   ├── controllers/
-│   │   └── authController.js    # Authentication logic
+│   │   ├── authController.js    # Authentication logic
+│   │   ├── eventController.js   # Event CRUD operations
+│   │   └── notificationController.js  # Notification handling
 │   ├── middleware/
-│   │   └── authMiddleware.js    # JWT verification
+│   │   └── authMiddleware.js    # JWT verification middleware
 │   ├── models/
-│   │   └── Student.js           # Student schema
+│   │   ├── Student.js           # User/Student schema
+│   │   ├── Event.js             # Event schema
+│   │   └── Notification.js      # Notification schema
 │   ├── routes/
-│   │   └── authRoutes.js        # API routes
+│   │   ├── authRoutes.js        # Auth API endpoints
+│   │   ├── eventRoutes.js       # Event API endpoints
+│   │   └── notificationRoutes.js # Notification endpoints
 │   ├── .env                     # Environment variables
 │   ├── .gitignore
 │   ├── package.json
-│   └── server.js                # Entry point
+│   ├── server.js                # Express server entry
+│   ├── createAdmin.js           # Admin creation script
+│   └── README.md
 │
-└── frontend/
-    ├── api/
+├── frontend/                     # React Native App
+│   ├── api/
+│   │   └── api.js               # Axios API client
+│   ├── components/
+│   │   ├── Button.js            # Custom button component
+│   │   ├── InputField.js        # Form input component
+│   │   ├── LoadingSpinner.js    # Loading indicator
+│   │   └── QRTicketModal.js     # QR code modal
+│   ├── config/
+│   │   └── environment.js       # API URL configuration
+│   ├── constants/
+│   │   └── theme.js             # Colors, spacing, typography
+│   ├── screens/
+│   │   ├── LandingPage.js       # Welcome screen
+│   │   ├── LoginScreen.js       # Student login
+│   │   ├── RegisterScreen.js    # Student registration
+│   │   ├── AdminLoginScreen.js  # Admin/CR login
+│   │   ├── DashboardScreen.js   # Main event listing
+│   │   ├── EventDetailsScreen.js # Event details view
+│   │   ├── CreateEventScreen.js # Event creation form
+│   │   ├── ProfileScreen.js     # User profile
+│   │   ├── NotificationsScreen.js # Notification list
+│   │   ├── CalendarScreen.js    # Calendar view
+│   │   ├── MyEventsScreen.js    # User's events
+│   │   ├── AdminPanelScreen.js  # Admin dashboard
+│   │   ├── QRScannerScreen.js   # QR scanner
+│   │   └── SettingsScreen.js    # App settings
+│   ├── .gitignore
+│   ├── app.json                 # Expo configuration
+│   ├── eas.json                 # EAS Build configuration
+│   ├── package.json
+│   ├── App.js                   # Root component
+│   └── README.md
+│
+├── DOCS.md                      # Comprehensive documentation
+├── README.md                    # This file
+├── GETTING_STARTED.md          # Setup guide
+├── BUILD_APK_GUIDE.md          # Build instructions
+└── ARCHITECTURE.md             # System architecture
     │   └── api.js               # API configuration & methods
     ├── components/
     │   ├── Button.js            # Custom button component
@@ -229,92 +656,222 @@ This will open Expo DevTools in your browser.
 
 ### Base URL
 ```
-http://localhost:5000/api
+Production: https://your-app.onrender.com/api
+Development: http://localhost:5000/api
 ```
 
-### Endpoints
+### Authentication Endpoints
 
 #### 1. Register Student
 ```http
-POST /auth/register
+POST /api/auth/register
 ```
-
 **Request Body:**
 ```json
 {
   "name": "John Doe",
-  "usn": "1MS21CS001",
-  "email": "john@example.com",
+  "email": "john@college.edu",
   "password": "SecurePass123",
-  "year": 2,
-  "semester": 4,
   "phone": "9876543210",
-  "gender": "Male",
-  "department": "Computer Science & Engineering"
+  "department": "Computer Science",
+  "year": "2",
+  "rollNumber": "CS2021001"
 }
 ```
-
 **Response (201):**
 ```json
 {
-  "success": true,
-  "message": "Registration successful",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "student": {
-      "id": "507f1f77bcf86cd799439011",
-      "name": "John Doe",
-      "usn": "1MS21CS001",
-      "email": "john@example.com",
-      "year": 2,
-      "semester": 4,
-      "phone": "9876543210",
-      "gender": "Male",
-      "department": "Computer Science & Engineering"
-    }
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "507f1f77bcf86cd799439011",
+    "name": "John Doe",
+    "email": "john@college.edu",
+    "role": "student"
   }
 }
 ```
 
-#### 2. Login Student
+#### 2. Login (Student/Admin/CR)
 ```http
-POST /auth/login
+POST /api/auth/login
 ```
-
 **Request Body:**
 ```json
 {
-  "email": "john@example.com",
+  "email": "john@college.edu",
   "password": "SecurePass123"
 }
 ```
 
-**Response (200):**
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "student": { /* student data */ }
-  }
-}
-```
-
-#### 3. Get Profile (Protected)
+#### 3. Logout
 ```http
-GET /auth/profile
+POST /api/auth/logout
 Authorization: Bearer <token>
 ```
 
-**Response (200):**
-```json
+#### 4. Get Profile
+```http
+GET /api/auth/profile
+Authorization: Bearer <token>
+```
+
+#### 5. Update Profile
+```http
+PUT /api/auth/profile
+Authorization: Bearer <token>
+Content-Type: application/json
+
 {
-  "success": true,
-  "data": {
-    "student": { /* student data */ }
-  }
+  "name": "John Updated",
+  "phone": "9876543210",
+  "department": "Computer Science"
 }
+```
+
+#### 6. Change Password
+```http
+PUT /api/auth/change-password
+Authorization: Bearer <token>
+
+{
+  "currentPassword": "OldPass123",
+  "newPassword": "NewPass456"
+}
+```
+
+#### 7. Update Push Token
+```http
+PUT /api/auth/push-token
+Authorization: Bearer <token>
+
+{
+  "expoPushToken": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
+}
+```
+
+### Event Endpoints
+
+#### 1. Get All Events (Approved)
+```http
+GET /api/events
+GET /api/events?category=Technical
+GET /api/events?search=hackathon
+```
+
+#### 2. Get Event by ID
+```http
+GET /api/events/:id
+```
+
+#### 3. Create Event
+```http
+POST /api/events
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+{
+  "title": "Tech Fest 2025",
+  "description": "Annual technical festival",
+  "category": "Technical",
+  "date": "2025-12-15",
+  "time": "10:00 AM",
+  "location": "Main Auditorium",
+  "capacity": 200,
+  "organizer": "CS Department",
+  "image": <file>
+}
+```
+
+#### 4. Update Event
+```http
+PUT /api/events/:id
+Authorization: Bearer <token>
+```
+
+#### 5. Delete Event
+```http
+DELETE /api/events/:id
+Authorization: Bearer <token>
+```
+
+#### 6. RSVP to Event
+```http
+POST /api/events/:id/rsvp
+Authorization: Bearer <token>
+```
+
+#### 7. Cancel RSVP
+```http
+DELETE /api/events/:id/rsvp
+Authorization: Bearer <token>
+```
+
+#### 8. Get My Events (Created)
+```http
+GET /api/events/my-events
+Authorization: Bearer <token>
+```
+
+#### 9. Get My RSVPs
+```http
+GET /api/events/my-rsvps
+Authorization: Bearer <token>
+```
+
+### Admin Endpoints
+
+#### 1. Get Pending Events
+```http
+GET /api/events/admin/pending
+Authorization: Bearer <admin-token>
+```
+
+#### 2. Approve Event
+```http
+PUT /api/events/:id/approve
+Authorization: Bearer <admin-token>
+```
+
+#### 3. Reject Event
+```http
+PUT /api/events/:id/reject
+Authorization: Bearer <admin-token>
+
+{
+  "reason": "Does not meet guidelines"
+}
+```
+
+#### 4. Get All Users
+```http
+GET /api/auth/admin/users
+Authorization: Bearer <admin-token>
+```
+
+### Notification Endpoints
+
+#### 1. Get User Notifications
+```http
+GET /api/notifications
+Authorization: Bearer <token>
+```
+
+#### 2. Mark as Read
+```http
+PUT /api/notifications/:id/read
+Authorization: Bearer <token>
+```
+
+#### 3. Mark All as Read
+```http
+PUT /api/notifications/read-all
+Authorization: Bearer <token>
+```
+
+#### 4. Delete Notification
+```http
+DELETE /api/notifications/:id
+Authorization: Bearer <token>
 ```
 
 ### Error Responses
@@ -322,7 +879,6 @@ Authorization: Bearer <token>
 **400 Bad Request:**
 ```json
 {
-  "success": false,
   "message": "Please provide all required fields"
 }
 ```
@@ -330,16 +886,28 @@ Authorization: Bearer <token>
 **401 Unauthorized:**
 ```json
 {
-  "success": false,
-  "message": "Not authorized - Invalid token"
+  "message": "Not authorized, no token"
+}
+```
+
+**403 Forbidden:**
+```json
+{
+  "message": "Not authorized as admin"
+}
+```
+
+**404 Not Found:**
+```json
+{
+  "message": "Event not found"
 }
 ```
 
 **500 Internal Server Error:**
 ```json
 {
-  "success": false,
-  "message": "Server error during registration",
+  "message": "Server error",
   "error": "Error details..."
 }
 ```
@@ -410,18 +978,43 @@ The app uses a professional and modern color scheme:
 
 ## 🚧 Future Enhancements
 
-- [ ] Event browsing and registration
-- [ ] Event creation (admin panel)
-- [ ] QR code ticket generation
-- [ ] Push notifications
-- [ ] Payment integration
-- [ ] Social media sharing
-- [ ] Calendar integration
-- [ ] Event reminders
-- [ ] Certificate generation
-- [ ] Analytics dashboard
-- [ ] Dark mode support
-- [ ] Multi-language support
+### Planned Features
+- [ ] **Certificate Generation** - Auto-generate participation certificates
+- [ ] **Analytics Dashboard** - Detailed event analytics and insights
+- [ ] **Email Notifications** - Nodemailer integration for email alerts
+- [ ] **SMS Notifications** - Twilio integration for SMS reminders
+- [ ] **Social Media Integration** - Share to Facebook, Twitter, LinkedIn
+- [ ] **Event Feedback System** - Post-event ratings and reviews
+- [ ] **Attendance Tracking** - QR code check-in/out system
+- [ ] **Event Chat** - Real-time chat for event attendees
+- [ ] **Event Polls** - Create polls for event attendees
+
+### UI/UX Improvements
+- [ ] **Dark Mode** - System-wide dark theme
+- [ ] **Multi-language Support** - i18n for regional languages
+- [ ] **Offline Mode** - Cache events for offline viewing
+- [ ] **Advanced Filters** - Filter by date range, location, etc.
+- [ ] **Map Integration** - Google Maps for event locations
+
+
+### Admin Features
+- [ ] **Advanced Analytics** - Charts and graphs for event data
+- [ ] **Bulk Operations** - Bulk approve/reject events
+- [ ] **User Management** - Ban/suspend users
+- [ ] **Event Templates** - Reusable event templates
+- [ ] **Automated Reports** - Weekly/monthly event reports
+- [ ] **Role Management** - Custom roles and permissions
+
+### Technical Improvements
+- [ ] **GraphQL API** - Replace REST with GraphQL
+- [ ] **WebSocket** - Real-time updates without polling
+- [ ] **Redis Cache** - Cache frequently accessed data
+- [ ] **Microservices** - Split into independent services
+- [ ] **Docker** - Containerize application
+- [ ] **CI/CD Pipeline** - Automated testing and deployment
+- [ ] **Unit Tests** - Jest/Mocha test coverage
+- [ ] **API Rate Limiting** - Prevent API abuse
+- [ ] **CDN Integration** - Faster static content delivery
 
 ## 🤝 Contributing
 
@@ -442,47 +1035,73 @@ Want to create an installable APK for distribution? Follow our comprehensive gui
 ### Quick Build Steps:
 
 ```bash
-# Install EAS CLI
+# Install EAS CLI (if not installed)
 npm install -g eas-cli
 
-# Navigate to frontend
+# Navigate to frontend directory
 cd frontend
 
-# Login to Expo
-npx eas login
+# Login to Expo account
+eas login
 
-# Build APK
-npx eas build -p android --profile preview
+# Build production APK
+eas build --platform android --profile production
+
+# Download APK from Expo dashboard when complete
+# https://expo.dev/accounts/YOUR_USERNAME/projects
 ```
 
-**Important:** Before building, deploy your backend online so the app works for all users!
+**Build Profiles:**
+- `development` - Development build with debugging
+- `preview` - Preview APK for testing
+- `production` - Production-ready signed APK
 
-📖 **[DEPLOY_BACKEND.md](DEPLOY_BACKEND.md)** - Backend deployment guide
+**Important Notes:**
+1. **Backend is deployed on Render** - Production API is live
+2. Update `frontend/config/environment.js` with Render API URL
+3. Build typically takes 10-20 minutes
+4. APK will be available on Expo dashboard for download
 
-## �📝 License
+**Deployment Stack:**
+- **Backend Hosting:** Render (https://render.com)
+- **Database:** MongoDB Atlas
+- **Image Storage:** Cloudinary CDN
+- **Push Notifications:** Expo Push API
+
+📖 **[BUILD_APK_GUIDE.md](BUILD_APK_GUIDE.md)** - Detailed build instructions  
+📖 **[DOCS.md](DOCS.md)** - Complete documentation
+
+## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👨‍💻 Authors
+## 👨‍💻 Author
 
-- **SammyBoy-09** - Samuel Lazar
-- **CampusConnect Team** - Initial work
+**Samuel Lazar (SammyBoy-09)**  
+📧 Email: [Your Email]  
+🔗 GitHub: [@SammyBoy-09](https://github.com/SammyBoy-09)  
+📦 Repository: [Event-Management-Mini-Project](https://github.com/SammyBoy-09/Event-Management-Mini-Project)
 
 ## 🙏 Acknowledgments
 
-- React Native documentation
-- Express.js community
-- MongoDB Atlas
-- Expo team
-- All open-source contributors
+- **React Native & Expo** - Cross-platform mobile development
+- **MongoDB Atlas** - Cloud database hosting
+- **Cloudinary** - Image CDN and storage
+- **Expo Push Notifications** - Push notification service
+- **Express.js Community** - Backend framework
+- **Open Source Contributors** - All the amazing libraries
 
-## 📞 Support
+## 📞 Support & Documentation
 
-For support, open an issue in the repository or check our detailed guides:
-- [Building APK Guide](BUILD_APK_GUIDE.md)
-- [Backend Deployment Guide](DEPLOY_BACKEND.md)
-- [Backend Quick Start](backend/START_HERE.md)
+For detailed guides and troubleshooting:
+- 📖 **[DOCS.md](DOCS.md)** - Complete documentation
+- 🚀 **[GETTING_STARTED.md](GETTING_STARTED.md)** - Setup guide
+- 📦 **[BUILD_APK_GUIDE.md](BUILD_APK_GUIDE.md)** - Build instructions
+- 🏗️ **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture
+
+**Need help?** Open an issue in the repository!
 
 ---
 
-**Made with ❤️ by CampusConnect Team**
+**Built with ❤️ for Campus Event Management**  
+*Last Updated: November 9, 2025*
