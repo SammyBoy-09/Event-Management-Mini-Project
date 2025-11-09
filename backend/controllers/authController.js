@@ -173,14 +173,21 @@ exports.loginStudent = async (req, res) => {
  */
 exports.getProfile = async (req, res) => {
   try {
-    // Check if user is admin based on role
-    const isAdmin = req.user.role === 'admin' || req.user.role === 'cr' || req.user.role === 'CR';
+    // Check if req.user exists and has the collection field set by middleware
+    // The middleware sets req.user to the fetched Admin or Student document
+    // We can check if it's an Admin by checking the model name
+    const isAdmin = req.user.constructor.modelName === 'Admin' || 
+                    req.user.role === 'admin' || 
+                    req.user.role === 'cr' || 
+                    req.user.role === 'CR';
+    
+    console.log('getProfile - User model:', req.user.constructor.modelName);
+    console.log('getProfile - User role:', req.user.role);
+    console.log('getProfile - isAdmin:', isAdmin);
     
     if (isAdmin) {
-      // Return admin profile
-      const admin = await Admin.findById(req.user.id)
-        .select('-password')
-        .populate('approvedEvents', 'title date time location category');
+      // Return admin profile (req.user is already the Admin document)
+      const admin = req.user;
 
       if (!admin) {
         return res.status(404).json({
@@ -188,6 +195,9 @@ exports.getProfile = async (req, res) => {
           message: 'Admin not found'
         });
       }
+
+      // Populate events if not already populated
+      await admin.populate('approvedEvents', 'title date time location category');
 
       return res.status(200).json({
         success: true,
@@ -198,7 +208,7 @@ exports.getProfile = async (req, res) => {
             email: admin.email,
             phone: admin.phone,
             department: admin.department,
-            role: admin.role,
+            role: admin.role || 'admin',
             permissions: admin.permissions,
             approvedEvents: admin.approvedEvents,
             createdAt: admin.createdAt,
@@ -207,10 +217,8 @@ exports.getProfile = async (req, res) => {
         }
       });
     } else {
-      // Return student profile
-      const student = await Student.findById(req.user.id)
-        .select('-password')
-        .populate('registeredEvents', 'title date time location category');
+      // Return student profile (req.user is already the Student document)
+      const student = req.user;
 
       if (!student) {
         return res.status(404).json({
@@ -218,6 +226,9 @@ exports.getProfile = async (req, res) => {
           message: 'Student not found'
         });
       }
+
+      // Populate events if not already populated
+      await student.populate('registeredEvents', 'title date time location category');
 
       return res.status(200).json({
         success: true,
