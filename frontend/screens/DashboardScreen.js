@@ -496,8 +496,8 @@ const DashboardScreen = ({ navigation }) => {
                 />
               )}
               
-              <Text style={styles.eventTitle}>{event.title}</Text>
-              <Text style={styles.eventDescription} numberOfLines={2}>
+              <Text style={styles.eventTitle} numberOfLines={2}>{event.title}</Text>
+              <Text style={styles.eventDescription} numberOfLines={3}>
                 {event.description}
               </Text>
               

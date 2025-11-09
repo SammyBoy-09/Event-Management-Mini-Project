@@ -171,7 +171,7 @@ const NotificationsScreen = ({ navigation }) => {
       </View>
       
       <View style={styles.notificationContent}>
-        <Text style={styles.notificationTitle}>{item.title}</Text>
+        <Text style={styles.notificationTitle} numberOfLines={1}>{item.title}</Text>
         <Text style={styles.notificationMessage} numberOfLines={2}>
           {item.message}
         </Text>
