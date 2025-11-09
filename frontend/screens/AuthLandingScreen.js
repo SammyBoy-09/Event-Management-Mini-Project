@@ -20,16 +20,16 @@ const AuthLandingScreen = ({ navigation }) => {
         colors={[COLORS.PRIMARY, COLORS.SECONDARY, '#8B5CF6']}
         style={styles.gradient}
       >
-        {/* Logo/Brand Section */}
+        {/* Logo/Brand Section - Top of Screen */}
         <View style={styles.headerSection}>
           <View style={styles.logoContainer}>
-            <Ionicons name="calendar" size={64} color={COLORS.WHITE} />
+            <Ionicons name="calendar" size={48} color={COLORS.WHITE} />
           </View>
           <Text style={styles.appName}>CampusConnect</Text>
           <Text style={styles.tagline}>Your Campus Events, One App</Text>
         </View>
 
-        {/* Auth Options */}
+        {/* Auth Options - Centered */}
         <View style={styles.authOptionsContainer}>
           <Text style={styles.welcomeText}>Welcome! Choose your role</Text>
 
@@ -104,60 +104,59 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
-    paddingHorizontal: SPACING.lg,
   },
   headerSection: {
     alignItems: 'center',
-    paddingTop: SPACING.xxxl,
-    paddingBottom: SPACING.xl,
+    paddingTop: 80,
+    paddingBottom: SPACING.lg,
+    paddingHorizontal: SPACING.lg,
   },
   logoContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: SPACING.lg,
-    ...SHADOWS.lg,
+    marginBottom: SPACING.md,
   },
   appName: {
-    fontSize: 36,
+    fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.WHITE,
     marginBottom: SPACING.xs,
     letterSpacing: -0.5,
   },
   tagline: {
-    fontSize: 16,
+    fontSize: 14,
     color: COLORS.WHITE,
     opacity: 0.9,
   },
   authOptionsContainer: {
     flex: 1,
     justifyContent: 'center',
-    paddingBottom: SPACING.xxxl,
+    paddingHorizontal: SPACING.lg,
   },
   welcomeText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
     color: COLORS.WHITE,
     textAlign: 'center',
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
   },
   authCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.WHITE,
-    borderRadius: RADIUS.xl,
+    borderRadius: RADIUS.lg,
     padding: SPACING.lg,
     marginBottom: SPACING.md,
-    ...SHADOWS.lg,
+    ...SHADOWS.md,
   },
   iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: COLORS.PRIMARY + '20',
     justifyContent: 'center',
     alignItems: 'center',
@@ -167,19 +166,20 @@ const styles = StyleSheet.create({
     marginLeft: SPACING.md,
   },
   authCardTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: 'bold',
     color: COLORS.TEXT,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   authCardSubtitle: {
     fontSize: 13,
     color: COLORS.TEXT_SECONDARY,
-    lineHeight: 18,
+    lineHeight: 17,
   },
   infoSection: {
-    marginTop: SPACING.xl,
+    marginTop: SPACING.lg,
     alignItems: 'center',
+    paddingHorizontal: SPACING.md,
   },
   infoText: {
     fontSize: 14,
@@ -192,19 +192,21 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   infoSubtext: {
-    fontSize: 12,
+    fontSize: 11,
     color: COLORS.WHITE,
-    opacity: 0.7,
+    opacity: 0.8,
     textAlign: 'center',
+    lineHeight: 16,
   },
   footer: {
-    paddingVertical: SPACING.lg,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 12,
+    fontSize: 11,
     color: COLORS.WHITE,
-    opacity: 0.6,
+    opacity: 0.7,
   },
 });
 
