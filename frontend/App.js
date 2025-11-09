@@ -33,6 +33,7 @@ import QRScannerScreen from './screens/QRScannerScreen';
 import AttendanceScreen from './screens/AttendanceScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import CalendarScreen from './screens/CalendarScreen';
+import MyEventsScreen from './screens/MyEventsScreen';
 import LoadingSpinner from './components/LoadingSpinner';
 
 // API
@@ -297,6 +298,14 @@ export default function App() {
             component={CalendarScreen}
             options={{ 
               title: 'Event Calendar',
+              animationEnabled: true,
+            }}
+          />
+          <Stack.Screen 
+            name="MyEvents" 
+            component={MyEventsScreen}
+            options={{ 
+              headerShown: false,
               animationEnabled: true,
             }}
           />

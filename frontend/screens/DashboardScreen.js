@@ -254,7 +254,7 @@ const DashboardScreen = ({ navigation }) => {
           {user && user.role === 'student' && (
             <TouchableOpacity 
               style={[styles.actionButton, { backgroundColor: COLORS.SECONDARY + '20' }]}
-              onPress={() => navigation.navigate('Profile')}
+              onPress={() => navigation.navigate('MyEvents')}
             >
               <Ionicons name="calendar" size={32} color={COLORS.SECONDARY} />
               <Text style={styles.actionButtonText}>My Events</Text>
