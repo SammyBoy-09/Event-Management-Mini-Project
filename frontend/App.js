@@ -31,6 +31,7 @@ import AdminPanelScreen from './screens/AdminPanelScreen';
 import QRScannerScreen from './screens/QRScannerScreen';
 import AttendanceScreen from './screens/AttendanceScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import CalendarScreen from './screens/CalendarScreen';
 import LoadingSpinner from './components/LoadingSpinner';
 
 // API
@@ -280,6 +281,14 @@ export default function App() {
             component={AttendanceScreen}
             options={{ 
               title: 'Attendance Management',
+              animationEnabled: true,
+            }}
+          />
+          <Stack.Screen 
+            name="Calendar" 
+            component={CalendarScreen}
+            options={{ 
+              title: 'Event Calendar',
               animationEnabled: true,
             }}
           />

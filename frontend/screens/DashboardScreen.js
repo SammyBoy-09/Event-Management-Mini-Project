@@ -220,6 +220,15 @@ const DashboardScreen = ({ navigation }) => {
             <Text style={styles.actionButtonText}>Create Event</Text>
           </TouchableOpacity>
 
+          {/* Calendar View */}
+          <TouchableOpacity 
+            style={[styles.actionButton, { backgroundColor: '#4ECDC420' }]}
+            onPress={() => navigation.navigate('Calendar')}
+          >
+            <Ionicons name="calendar-outline" size={32} color="#4ECDC4" />
+            <Text style={styles.actionButtonText}>Calendar</Text>
+          </TouchableOpacity>
+
           {/* Admin Panel - Only for Admins and CRs */}
           {user && (user.role === 'admin' || user.role === 'cr' || user.role === 'CR') && (
             <TouchableOpacity 

@@ -23,6 +23,11 @@ const EventDetailsScreen = ({ route, navigation }) => {
   const [user, setUser] = useState(null);
   const [showQRTicket, setShowQRTicket] = useState(false);
 
+  // Debug logging for showQRTicket state changes
+  useEffect(() => {
+    console.log('EventDetailsScreen - showQRTicket state changed to:', showQRTicket);
+  }, [showQRTicket]);
+
   useEffect(() => {
     loadUser();
     loadEventDetails();
@@ -292,7 +297,12 @@ const EventDetailsScreen = ({ route, navigation }) => {
           <View style={styles.footerButtons}>
             <Button
               title="View QR Ticket"
-              onPress={() => setShowQRTicket(true)}
+              onPress={() => {
+                console.log('View QR Ticket button pressed');
+                console.log('Current showQRTicket state:', showQRTicket);
+                setShowQRTicket(true);
+                console.log('setShowQRTicket(true) called');
+              }}
               variant="primary"
               style={styles.footerButton}
               icon="qr-code"
