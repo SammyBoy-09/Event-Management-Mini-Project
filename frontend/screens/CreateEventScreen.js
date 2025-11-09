@@ -93,7 +93,7 @@ const CreateEventScreen = ({ navigation }) => {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [16, 9], // Landscape aspect ratio for event flyers
+        // No fixed aspect ratio - allows both landscape and portrait
         quality: 0.8, // Good quality while keeping file size reasonable
       });
 
@@ -289,7 +289,7 @@ const CreateEventScreen = ({ navigation }) => {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Event Flyer/Poster (Optional)</Text>
             <Text style={styles.helperText}>
-              Upload an event flyer, poster, or invitation image
+              Upload event image (landscape or portrait)
             </Text>
             
             {selectedImage ? (
