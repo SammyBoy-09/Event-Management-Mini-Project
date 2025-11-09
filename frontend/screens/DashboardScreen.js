@@ -43,11 +43,8 @@ const DashboardScreen = ({ navigation }) => {
   const [availabilityFilter, setAvailabilityFilter] = useState(false); // Show only available spots
 
   useEffect(() => {
-    const initializeScreen = async () => {
-      const userData = await loadUserData();
-      await loadEvents(userData);
-    };
-    initializeScreen();
+    loadUserData();
+    loadEvents();
   }, []);
 
   const loadUserData = async () => {
@@ -70,48 +67,13 @@ const DashboardScreen = ({ navigation }) => {
       setLoading(true);
       const response = await getAllEvents({ upcoming: 'true' });
       
-      // If no user passed, get from AsyncStorage
-      if (!currentUser) {
-        const userDataStr = await AsyncStorage.getItem('userData');
-        currentUser = userDataStr ? JSON.parse(userDataStr) : null;
-      }
-      
-      if (!currentUser) {
-        console.log('⚠️ No user data found');
-        setEvents(response.data || []);
-        return;
-      }
-      
-      console.log('👤 Current User:', {
-        id: currentUser._id,
-        name: currentUser.name,
-        registeredEvents: currentUser.registeredEvents || []
-      });
-      
-      // Get list of registered event IDs from user data
-      const registeredEventIds = (currentUser.registeredEvents || []).map(eventId => 
-        typeof eventId === 'object' ? eventId._id : eventId
-      );
-      
-      console.log('✅ Registered Event IDs:', registeredEventIds);
-      
-      // Add hasRSVP property based on user's registeredEvents array
-      const eventsWithRSVP = (response.data || []).map(event => {
-        const isRSVPd = registeredEventIds.includes(event._id);
-        
-        return {
-          ...event,
-          hasRSVP: isRSVPd
-        };
-      });
-      
-      console.log('📋 Events with RSVP flags:', eventsWithRSVP.map(e => ({
+      // Backend already adds hasRSVP flag to each event
+      console.log('� Events loaded:', response.data?.map(e => ({
         title: e.title,
-        eventId: e._id,
         hasRSVP: e.hasRSVP
       })));
       
-      setEvents(eventsWithRSVP);
+      setEvents(response.data || []);
     } catch (error) {
       console.error('Error loading events:', error);
       Alert.alert('Error', 'Failed to load events');
@@ -140,15 +102,12 @@ const DashboardScreen = ({ navigation }) => {
         Alert.alert('Success', 'RSVP confirmed successfully!');
       }
       
-      // Reload user data to get updated registeredEvents
-      const updatedUser = await loadUserData();
-      // Reload events with updated user data
-      await loadEvents(updatedUser);
+      // Reload events to get updated hasRSVP flags from backend
+      await loadEvents();
     } catch (error) {
       Alert.alert('Error', error.message || 'Failed to process RSVP');
       // Reload on error to ensure consistency
-      const updatedUser = await loadUserData();
-      await loadEvents(updatedUser);
+      await loadEvents();
     }
   };
 

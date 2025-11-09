@@ -136,16 +136,29 @@ exports.getAllEvents = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const events = await Event.find(query)
       .populate('createdBy', 'name email usn role')
+      .populate('attendees.student', 'name email usn')
       .sort({ date: 1, createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
+
+    // Add hasRSVP flag for each event (check if current user has RSVP'd)
+    const eventsWithRSVP = events.map(event => {
+      const hasRSVP = req.student && req.student.id 
+        ? event.attendees.some(att => att.student && att.student._id.toString() === req.student.id)
+        : false;
+      
+      return {
+        ...event.toObject(),
+        hasRSVP
+      };
+    });
 
     // Get total count for pagination
     const total = await Event.countDocuments(query);
 
     res.status(200).json({
       success: true,
-      data: events,
+      data: eventsWithRSVP,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
