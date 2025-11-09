@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import api, { getAuthData } from '../api/api';
 
 /**
@@ -373,26 +374,22 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 15,
+    backgroundColor: COLORS.WHITE,
+    borderRadius: RADIUS.MD,
+    padding: SPACING.MD,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...SHADOWS.SMALL,
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: TYPOGRAPHY.SIZES.XXL,
     fontWeight: 'bold',
-    color: '#2D3748',
-    marginTop: 8,
+    color: COLORS.TEXT_DARK,
+    marginTop: SPACING.SM,
   },
   statLabel: {
-    fontSize: 12,
-    color: '#718096',
-    marginTop: 4,
+    fontSize: TYPOGRAPHY.SIZES.XS,
+    color: COLORS.TEXT_LIGHT,
+    marginTop: SPACING.XS,
     textAlign: 'center',
   },
   listContainer: {
@@ -481,27 +478,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7FAFC',
   },
   scannerButton: {
-    backgroundColor: '#6C5CE7',
-    borderRadius: 16,
-    padding: 20,
+    backgroundColor: COLORS.PRIMARY,
+    borderRadius: RADIUS.LG,
+    padding: SPACING.LG,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    ...SHADOWS.MEDIUM,
   },
   scannerTextContainer: {
     flex: 1,
-    marginLeft: 16,
+    marginLeft: SPACING.MD,
   },
   scannerButtonText: {
-    fontSize: 18,
+    fontSize: TYPOGRAPHY.SIZES.LG,
     fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 4,
+    color: COLORS.WHITE,
+    marginBottom: SPACING.XS,
   },
   scannerButtonSubtext: {
     fontSize: 13,
