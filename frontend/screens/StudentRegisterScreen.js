@@ -9,12 +9,26 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS } from '../constants/theme';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
 import { registerStudent, saveAuthData } from '../api/api';
+
+// Dropdown options
+const DEPARTMENTS = [
+  'Computer Science and Engineering',
+  'Cyber Security',
+  'Electronics and Communication Engineering',
+  'Mechanical Engineering',
+  'Data Science',
+  'Artificial Intelligence and Machine Learning',
+];
+
+const YEARS = ['1', '2', '3', '4'];
+const SEMESTERS = ['1', '2', '3', '4', '5', '6', '7', '8'];
 
 const StudentRegisterScreen = ({ navigation }) => {
   const [formData, setFormData] = useState({
@@ -33,6 +47,9 @@ const StudentRegisterScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showDepartmentModal, setShowDepartmentModal] = useState(false);
+  const [showYearModal, setShowYearModal] = useState(false);
+  const [showSemesterModal, setShowSemesterModal] = useState(false);
 
   const handleChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
@@ -216,40 +233,53 @@ const StudentRegisterScreen = ({ navigation }) => {
             maxLength={10}
           />
 
-          <InputField
-            label="Department"
-            placeholder="e.g., Computer Science"
-            value={formData.department}
-            onChangeText={(value) => handleChange('department', value)}
-            error={errors.department}
-            icon="school-outline"
-            autoCapitalize="words"
-          />
+          {/* Department Dropdown */}
+          <View style={styles.dropdownContainer}>
+            <Text style={styles.dropdownLabel}>Department</Text>
+            <TouchableOpacity
+              style={[styles.dropdownButton, errors.department && styles.dropdownButtonError]}
+              onPress={() => setShowDepartmentModal(true)}
+            >
+              <Ionicons name="school-outline" size={20} color={COLORS.TEXT_SECONDARY} style={styles.dropdownIcon} />
+              <Text style={[styles.dropdownButtonText, !formData.department && styles.dropdownPlaceholder]}>
+                {formData.department || 'Select your department'}
+              </Text>
+              <Ionicons name="chevron-down" size={20} color={COLORS.TEXT_SECONDARY} />
+            </TouchableOpacity>
+            {errors.department && <Text style={styles.errorText}>{errors.department}</Text>}
+          </View>
 
           <View style={styles.row}>
+            {/* Year Dropdown */}
             <View style={styles.halfWidth}>
-              <InputField
-                label="Year"
-                placeholder="1-4"
-                value={formData.year}
-                onChangeText={(value) => handleChange('year', value)}
-                error={errors.year}
-                keyboardType="number-pad"
-                icon="calendar-outline"
-                maxLength={1}
-              />
+              <Text style={styles.dropdownLabel}>Year</Text>
+              <TouchableOpacity
+                style={[styles.dropdownButton, errors.year && styles.dropdownButtonError]}
+                onPress={() => setShowYearModal(true)}
+              >
+                <Ionicons name="calendar-outline" size={20} color={COLORS.TEXT_SECONDARY} style={styles.dropdownIcon} />
+                <Text style={[styles.dropdownButtonText, !formData.year && styles.dropdownPlaceholder]}>
+                  {formData.year || 'Year'}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color={COLORS.TEXT_SECONDARY} />
+              </TouchableOpacity>
+              {errors.year && <Text style={styles.errorText}>{errors.year}</Text>}
             </View>
+
+            {/* Semester Dropdown */}
             <View style={styles.halfWidth}>
-              <InputField
-                label="Semester"
-                placeholder="1-8"
-                value={formData.semester}
-                onChangeText={(value) => handleChange('semester', value)}
-                error={errors.semester}
-                keyboardType="number-pad"
-                icon="calendar-outline"
-                maxLength={1}
-              />
+              <Text style={styles.dropdownLabel}>Semester</Text>
+              <TouchableOpacity
+                style={[styles.dropdownButton, errors.semester && styles.dropdownButtonError]}
+                onPress={() => setShowSemesterModal(true)}
+              >
+                <Ionicons name="calendar-outline" size={20} color={COLORS.TEXT_SECONDARY} style={styles.dropdownIcon} />
+                <Text style={[styles.dropdownButtonText, !formData.semester && styles.dropdownPlaceholder]}>
+                  {formData.semester || 'Sem'}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color={COLORS.TEXT_SECONDARY} />
+              </TouchableOpacity>
+              {errors.semester && <Text style={styles.errorText}>{errors.semester}</Text>}
             </View>
           </View>
 
@@ -357,6 +387,150 @@ const StudentRegisterScreen = ({ navigation }) => {
           </Text>
         </View>
       </ScrollView>
+
+      {/* Department Modal */}
+      <Modal
+        visible={showDepartmentModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowDepartmentModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowDepartmentModal(false)}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Department</Text>
+              <TouchableOpacity onPress={() => setShowDepartmentModal(false)}>
+                <Ionicons name="close" size={24} color={COLORS.TEXT} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalList}>
+              {DEPARTMENTS.map((dept) => (
+                <TouchableOpacity
+                  key={dept}
+                  style={[
+                    styles.modalItem,
+                    formData.department === dept && styles.modalItemSelected
+                  ]}
+                  onPress={() => {
+                    handleChange('department', dept);
+                    setShowDepartmentModal(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.modalItemText,
+                    formData.department === dept && styles.modalItemTextSelected
+                  ]}>
+                    {dept}
+                  </Text>
+                  {formData.department === dept && (
+                    <Ionicons name="checkmark" size={20} color={COLORS.PRIMARY} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Year Modal */}
+      <Modal
+        visible={showYearModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowYearModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowYearModal(false)}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Year</Text>
+              <TouchableOpacity onPress={() => setShowYearModal(false)}>
+                <Ionicons name="close" size={24} color={COLORS.TEXT} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.modalList}>
+              {YEARS.map((year) => (
+                <TouchableOpacity
+                  key={year}
+                  style={[
+                    styles.modalItem,
+                    formData.year === year && styles.modalItemSelected
+                  ]}
+                  onPress={() => {
+                    handleChange('year', year);
+                    setShowYearModal(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.modalItemText,
+                    formData.year === year && styles.modalItemTextSelected
+                  ]}>
+                    Year {year}
+                  </Text>
+                  {formData.year === year && (
+                    <Ionicons name="checkmark" size={20} color={COLORS.PRIMARY} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Semester Modal */}
+      <Modal
+        visible={showSemesterModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSemesterModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowSemesterModal(false)}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Semester</Text>
+              <TouchableOpacity onPress={() => setShowSemesterModal(false)}>
+                <Ionicons name="close" size={24} color={COLORS.TEXT} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.modalList}>
+              {SEMESTERS.map((sem) => (
+                <TouchableOpacity
+                  key={sem}
+                  style={[
+                    styles.modalItem,
+                    formData.semester === sem && styles.modalItemSelected
+                  ]}
+                  onPress={() => {
+                    handleChange('semester', sem);
+                    setShowSemesterModal(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.modalItemText,
+                    formData.semester === sem && styles.modalItemTextSelected
+                  ]}>
+                    Semester {sem}
+                  </Text>
+                  {formData.semester === sem && (
+                    <Ionicons name="checkmark" size={20} color={COLORS.PRIMARY} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -515,6 +689,88 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.ERROR,
     marginTop: SPACING.xs,
+  },
+  dropdownContainer: {
+    marginBottom: SPACING.md,
+  },
+  dropdownLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.TEXT,
+    marginBottom: SPACING.sm,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.WHITE,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm + 2,
+    minHeight: 50,
+  },
+  dropdownButtonError: {
+    borderColor: COLORS.ERROR,
+  },
+  dropdownIcon: {
+    marginRight: SPACING.sm,
+  },
+  dropdownButtonText: {
+    flex: 1,
+    fontSize: 14,
+    color: COLORS.TEXT,
+  },
+  dropdownPlaceholder: {
+    color: COLORS.TEXT_SECONDARY,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: COLORS.WHITE,
+    borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl,
+    maxHeight: '70%',
+    paddingBottom: SPACING.xl,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: SPACING.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.BORDER,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.TEXT,
+  },
+  modalList: {
+    maxHeight: 400,
+  },
+  modalItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.BORDER,
+  },
+  modalItemSelected: {
+    backgroundColor: COLORS.PRIMARY + '10',
+  },
+  modalItemText: {
+    fontSize: 15,
+    color: COLORS.TEXT,
+  },
+  modalItemTextSelected: {
+    color: COLORS.PRIMARY,
+    fontWeight: '600',
   },
 });
 
