@@ -27,6 +27,7 @@ import EventDetailsScreen from './screens/EventDetailsScreen';
 import CreateEventScreen from './screens/CreateEventScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import AdminProfileScreen from './screens/AdminProfileScreen';
 import AdminPanelScreen from './screens/AdminPanelScreen';
 import QRScannerScreen from './screens/QRScannerScreen';
 import AttendanceScreen from './screens/AttendanceScreen';
@@ -257,6 +258,13 @@ export default function App() {
           <Stack.Screen 
             name="Profile" 
             component={ProfileScreen}
+            options={{ 
+              animationEnabled: true,
+            }}
+          />
+          <Stack.Screen 
+            name="AdminProfile" 
+            component={AdminProfileScreen}
             options={{ 
               animationEnabled: true,
             }}

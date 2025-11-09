@@ -200,7 +200,14 @@ const DashboardScreen = ({ navigation }) => {
             
             <TouchableOpacity 
               style={styles.headerButton}
-              onPress={() => navigation.navigate('Profile')}
+              onPress={() => {
+                // Navigate to appropriate profile screen based on role
+                if (user && (user.role === 'admin' || user.role === 'cr' || user.role === 'CR')) {
+                  navigation.navigate('AdminProfile');
+                } else {
+                  navigation.navigate('Profile');
+                }
+              }}
             >
               <Ionicons name="person" size={24} color={COLORS.WHITE} />
             </TouchableOpacity>

@@ -53,8 +53,8 @@ const ProfileScreen = ({ navigation }) => {
       console.log('Profile loaded - Role:', studentData.role, 'IsAdmin:', studentData.isAdmin);
       
       setEditData({
-        name: studentData.name,
-        phone: studentData.phone,
+        name: studentData.name || '',
+        phone: studentData.phone || '',
         year: studentData.year ? studentData.year.toString() : '',
         semester: studentData.semester ? studentData.semester.toString() : '',
       });
@@ -267,9 +267,9 @@ const ProfileScreen = ({ navigation }) => {
               {profile?.usn && <InfoRow icon="card" label="USN" value={profile?.usn} />}
               <InfoRow icon="call" label="Phone" value={profile?.phone} />
               {profile?.year && <InfoRow icon="school" label="Year" value={`Year ${profile?.year}`} />}
-              <InfoRow icon="calendar" label="Semester" value={`Semester ${profile?.semester}`} />
+              {profile?.semester && <InfoRow icon="calendar" label="Semester" value={`Semester ${profile?.semester}`} />}
               <InfoRow icon="briefcase" label="Department" value={profile?.department} />
-              <InfoRow icon="transgender" label="Gender" value={profile?.gender} />
+              {profile?.gender && <InfoRow icon="transgender" label="Gender" value={profile?.gender} />}
             </>
           )}
         </View>
