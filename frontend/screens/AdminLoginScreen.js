@@ -151,6 +151,7 @@ const AdminLoginScreen = ({ navigation }) => {
             title={loading ? 'Signing In...' : 'Sign In as Admin'}
             onPress={handleLogin}
             disabled={loading}
+            variant="primary"
             style={styles.loginButton}
           />
 
@@ -249,8 +250,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   loginButton: {
-    marginTop: SPACING.md,
-    backgroundColor: '#EF4444',
+    marginTop: SPACING.MD,
   },
   registerSection: {
     flexDirection: 'row',

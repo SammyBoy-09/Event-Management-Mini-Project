@@ -5,14 +5,16 @@ import {
   StyleSheet,
   ActivityIndicator,
   Animated,
+  View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, TYPOGRAPHY, SHADOWS } from '../constants/theme';
 import { buttonPressAnimation } from '../utils/animations';
 
 /**
  * Custom Button Component
  * Reusable button with loading state and variants
- * Now with press animation
+ * Now with press animation and icon support
  */
 const Button = ({
   title,
@@ -22,6 +24,7 @@ const Button = ({
   variant = 'primary', // primary, secondary, outline
   style,
   textStyle,
+  icon,
 }) => {
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -55,20 +58,29 @@ const Button = ({
   };
 
   return (
-    <Animated.View style={{ transform: [{ scale }] }}>
+    <Animated.View style={[{ transform: [{ scale }] }, style]}>
       <TouchableOpacity
-        style={[styles.button, getButtonStyle(), style]}
+        style={[styles.button, getButtonStyle()]}
         onPress={onPress}
         onPressIn={handlePressIn}
         disabled={disabled || loading}
         activeOpacity={0.8}
       >
         {loading ? (
-          <ActivityIndicator color={variant === 'outline' ? COLORS.primary : COLORS.surface} />
+          <ActivityIndicator color={variant === 'outline' ? COLORS.PRIMARY : COLORS.WHITE} />
         ) : (
-          <Text style={[styles.text, getTextStyle(), textStyle]}>
-            {title}
-          </Text>
+          <View style={styles.buttonContent}>
+            {icon && (
+              <Ionicons 
+                name={icon} 
+                size={20} 
+                color={variant === 'outline' ? COLORS.PRIMARY : COLORS.WHITE}
+              />
+            )}
+            <Text style={[styles.text, getTextStyle(), textStyle]}>
+              {title}
+            </Text>
+          </View>
         )}
       </TouchableOpacity>
     </Animated.View>
@@ -78,39 +90,50 @@ const Button = ({
 const styles = StyleSheet.create({
   button: {
     height: 50,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.MD,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: SPACING.lg,
-    ...SHADOWS.small,
+    paddingHorizontal: SPACING.LG,
+    ...SHADOWS.SMALL,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
   buttonPrimary: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.PRIMARY,
   },
   buttonSecondary: {
-    backgroundColor: COLORS.secondary,
+    backgroundColor: COLORS.SECONDARY,
   },
   buttonOutline: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: COLORS.primary,
+    borderColor: COLORS.PRIMARY,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   buttonDisabled: {
     backgroundColor: COLORS.disabled,
   },
   text: {
-    ...TYPOGRAPHY.button,
     fontSize: 16,
     fontWeight: '600',
+    textAlign: 'center',
   },
   textPrimary: {
-    color: COLORS.surface,
+    color: COLORS.WHITE,
   },
   textOutline: {
-    color: COLORS.primary,
+    color: COLORS.PRIMARY,
   },
   textDisabled: {
-    color: COLORS.textLight,
+    color: COLORS.TEXT_LIGHT,
   },
 });
 

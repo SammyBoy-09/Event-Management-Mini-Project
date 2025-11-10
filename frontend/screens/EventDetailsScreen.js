@@ -159,7 +159,11 @@ const EventDetailsScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -379,6 +383,10 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    // ensure there's enough space for the footer + safe area so buttons aren't overlapped
+    paddingBottom: SPACING.XXL + SPACING.LG,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -571,7 +579,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   footer: {
-    padding: SPACING.LG,
+    paddingHorizontal: SPACING.LG,
+    paddingTop: SPACING.LG,
     paddingBottom: SPACING.XL,
     backgroundColor: COLORS.WHITE,
     borderTopWidth: 1,

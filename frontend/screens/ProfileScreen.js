@@ -280,15 +280,22 @@ const ProfileScreen = ({ navigation }) => {
         </View>
 
         {/* Registered Events */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Registered Events</Text>
+        <TouchableOpacity 
+          style={styles.section}
+          onPress={() => navigation.navigate('MyEvents')}
+          activeOpacity={0.7}
+        >
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Registered Events</Text>
+            <Ionicons name="chevron-forward" size={24} color={COLORS.PRIMARY} />
+          </View>
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
               <Text style={styles.statValue}>{profile?.registeredEvents?.length || 0}</Text>
               <Text style={styles.statLabel}>Events</Text>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Change Password */}
         <View style={styles.section}>
@@ -458,11 +465,16 @@ const styles = StyleSheet.create({
   section: {
     padding: SPACING.LG,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.MD,
+  },
   sectionTitle: {
     fontSize: TYPOGRAPHY.SIZES.LG,
     fontWeight: 'bold',
     color: COLORS.TEXT_DARK,
-    marginBottom: SPACING.MD,
   },
   infoRow: {
     flexDirection: 'row',
