@@ -14,6 +14,7 @@ import { Provider as PaperProvider } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 
 // Screens
+import SplashScreen from './screens/SplashScreen';
 import LandingPage from './screens/LandingPage';
 import LoginScreen from './screens/LoginScreen';
 import RegisterScreen from './screens/RegisterScreen';
@@ -54,6 +55,7 @@ const Stack = createStackNavigator();
  * Handles navigation and authentication flow
  */
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const notificationListener = useRef();
@@ -127,6 +129,12 @@ export default function App() {
     }
   };
 
+  // Show splash screen first
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
+  // Show loading spinner during auth check
   if (isLoading) {
     return <LoadingSpinner />;
   }
