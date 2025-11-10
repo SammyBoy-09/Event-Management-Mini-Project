@@ -316,11 +316,11 @@ const EventDetailsScreen = ({ route, navigation }) => {
               eventTitle: event.title 
             })}
           >
-            <Ionicons name="list-outline" size={20} color={COLORS.primary} />
+            <Ionicons name="list-outline" size={20} color={COLORS.PRIMARY} />
             <Text style={styles.viewAttendeesText}>
               View Attendees ({event.currentAttendees})
             </Text>
-            <Ionicons name="chevron-forward" size={20} color={COLORS.primary} />
+            <Ionicons name="chevron-forward" size={20} color={COLORS.PRIMARY} />
           </TouchableOpacity>
         )}
 
@@ -572,27 +572,29 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: SPACING.LG,
+    paddingBottom: SPACING.XL,
     backgroundColor: COLORS.WHITE,
     borderTopWidth: 1,
     borderTopColor: COLORS.BORDER,
     ...SHADOWS.LARGE,
+    elevation: 10,
   },
   viewAttendeesButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.primary + '10',
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    marginBottom: SPACING.md,
-    ...SHADOWS.small,
+    backgroundColor: COLORS.PRIMARY + '10',
+    padding: SPACING.MD,
+    borderRadius: RADIUS.MD,
+    marginBottom: SPACING.MD,
+    ...SHADOWS.SMALL,
   },
   viewAttendeesText: {
     flex: 1,
     fontSize: TYPOGRAPHY.SIZES.MD,
-    color: COLORS.primary,
+    color: COLORS.PRIMARY,
     fontWeight: '600',
-    marginLeft: SPACING.sm,
+    marginLeft: SPACING.SM,
   },
   footerButtons: {
     flexDirection: 'row',
