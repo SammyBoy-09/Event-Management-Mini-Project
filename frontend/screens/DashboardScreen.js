@@ -304,40 +304,68 @@ const DashboardScreen = ({ navigation }) => {
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actionButtons}>
           <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: COLORS.PRIMARY + '20' }]}
+            style={[
+              styles.actionButton, 
+              { 
+                backgroundColor: COLORS.PRIMARY + '10',
+                borderColor: COLORS.PRIMARY + '60',
+              }
+            ]}
             onPress={() => navigation.navigate('CreateEvent')}
+            activeOpacity={0.7}
           >
-            <Ionicons name="add-circle" size={32} color={COLORS.PRIMARY} />
-            <Text style={styles.actionButtonText}>Create Event</Text>
+            <Ionicons name="add-circle" size={36} color={COLORS.PRIMARY} />
+            <Text style={styles.actionButtonText}>Create{'\n'}Event</Text>
           </TouchableOpacity>
 
           {/* Calendar View */}
           <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: '#4ECDC420' }]}
+            style={[
+              styles.actionButton, 
+              { 
+                backgroundColor: '#4ECDC410',
+                borderColor: '#4ECDC460',
+              }
+            ]}
             onPress={() => navigation.navigate('Calendar')}
+            activeOpacity={0.9}
           >
-            <Ionicons name="calendar-outline" size={32} color="#4ECDC4" />
+            <Ionicons name="calendar-outline" size={36} color="#4ECDC4" />
             <Text style={styles.actionButtonText}>Calendar</Text>
           </TouchableOpacity>
 
           {/* Admin Panel - Only for Admins and CRs */}
           {user && (user.role === 'admin' || user.role === 'cr' || user.role === 'CR') && (
             <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: '#FF658420' }]}
+              style={[
+                styles.actionButton, 
+                { 
+                  backgroundColor: '#FF658410',
+                  borderColor: '#FF658460',
+                }
+              ]}
               onPress={() => navigation.navigate('AdminPanel')}
+              activeOpacity={0.7}
             >
-              <Ionicons name="shield-checkmark" size={32} color="#FF6584" />
-              <Text style={styles.actionButtonText}>Admin Panel</Text>
+              <Ionicons name="shield-checkmark" size={36} color="#FF6584" />
+              <Text style={styles.actionButtonText}>Admin{'\n'}Panel</Text>
             </TouchableOpacity>
           )}
 
           {/* My Events - Only for Students */}
           {user && user.role === 'student' && (
             <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: COLORS.SECONDARY + '20' }]}
+              style={[
+                styles.actionButton, 
+                { 
+                  backgroundColor: COLORS.SECONDARY + '10',
+                  borderColor: COLORS.SECONDARY + '60',
+                }
+              ]}
               onPress={() => navigation.navigate('MyEvents')}
+              activeOpacity={0.7}
             >
-              <Ionicons name="calendar" size={32} color={COLORS.SECONDARY} />
+              <Ionicons name="calendar" size={36} color={COLORS.SECONDARY} />
               <Text style={styles.actionButtonText}>My Events</Text>
             </TouchableOpacity>
           )}
@@ -798,21 +826,25 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: SPACING.SM,
   },
   actionButton: {
     flex: 1,
     alignItems: 'center',
-    padding: SPACING.MD,
-    borderRadius: RADIUS.MD,
-    marginHorizontal: SPACING.XS,
-    ...SHADOWS.SMALL,
+    paddingVertical: SPACING.LG,
+    paddingHorizontal: SPACING.SM,
+    borderRadius: RADIUS.LG,
+    marginHorizontal: 2,
+    borderWidth: 1.5,
+    borderBottomWidth: 3,
   },
   actionButtonText: {
     fontSize: TYPOGRAPHY.SIZES.SM,
     color: COLORS.TEXT_DARK,
-    marginTop: SPACING.XS,
+    marginTop: SPACING.SM,
     textAlign: 'center',
     fontWeight: '600',
+    letterSpacing: 0.2,
   },
   section: {
     paddingHorizontal: SPACING.LG,
