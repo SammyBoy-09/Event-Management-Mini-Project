@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { getEventById, rsvpEvent, cancelRSVP, deleteEvent } from '../api/api';
 import Button from '../components/Button';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRTicketModal from '../components/QRTicketModal';
+import AnimatedTag from '../components/AnimatedTag';
 
 const EventDetailsScreen = ({ route, navigation }) => {
   const { eventId } = route.params;
@@ -296,9 +297,7 @@ const EventDetailsScreen = ({ route, navigation }) => {
               <Text style={styles.tagsLabel}>Tags</Text>
               <View style={styles.tagsContainer}>
                 {event.tags.map((tag, index) => (
-                  <View key={index} style={styles.tag}>
-                    <Text style={styles.tagText}>{tag}</Text>
-                  </View>
+                  <AnimatedTag key={index} tag={tag} index={index} delay={60} />
                 ))}
               </View>
             </View>

@@ -18,6 +18,7 @@ import {
   deleteNotification,
   deleteAllNotifications,
 } from '../api/api';
+import AnimatedCard from '../components/AnimatedCard';
 
 const NotificationsScreen = ({ navigation }) => {
   const [notifications, setNotifications] = useState([]);
@@ -155,13 +156,15 @@ const NotificationsScreen = ({ navigation }) => {
     }
   };
 
-  const renderNotification = ({ item }) => (
-    <TouchableOpacity
+  const renderNotification = ({ item, index }) => (
+    <AnimatedCard
+      index={index}
+      delay={60}
+      onPress={() => handleNotificationPress(item)}
       style={[
         styles.notificationCard,
         !item.isRead && styles.notificationCardUnread,
       ]}
-      onPress={() => handleNotificationPress(item)}
     >
       <View style={[styles.iconContainer, { backgroundColor: getNotificationColor(item.type) + '20' }]}>
         <Ionicons
@@ -187,7 +190,7 @@ const NotificationsScreen = ({ navigation }) => {
       >
         <Ionicons name="trash-outline" size={20} color={COLORS.ERROR} />
       </TouchableOpacity>
-    </TouchableOpacity>
+    </AnimatedCard>
   );
 
   if (loading) {

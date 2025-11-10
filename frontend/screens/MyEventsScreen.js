@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { getAllEvents } from '../api/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import AnimatedCard from '../components/AnimatedCard';
 
 const MyEventsScreen = ({ navigation }) => {
   const [events, setEvents] = useState([]);
@@ -111,15 +112,16 @@ const MyEventsScreen = ({ navigation }) => {
     return date.toLocaleDateString('en-US', options);
   };
 
-  const renderEventCard = ({ item }) => {
+  const renderEventCard = ({ item, index }) => {
     const categoryColor = getCategoryColor(item.category);
     const isPast = !isEventUpcoming(item.date);
 
     return (
-      <TouchableOpacity
-        style={[styles.eventCard, isPast && styles.pastEventCard]}
+      <AnimatedCard
+        index={index}
+        delay={80}
         onPress={() => navigation.navigate('EventDetails', { eventId: item._id })}
-        activeOpacity={0.7}
+        style={[styles.eventCard, isPast && styles.pastEventCard]}
       >
         <View style={styles.eventHeader}>
           <View style={[styles.categoryBadge, { backgroundColor: categoryColor + '20' }]}>
@@ -185,7 +187,7 @@ const MyEventsScreen = ({ navigation }) => {
             </TouchableOpacity>
           )}
         </View>
-      </TouchableOpacity>
+      </AnimatedCard>
     );
   };
 

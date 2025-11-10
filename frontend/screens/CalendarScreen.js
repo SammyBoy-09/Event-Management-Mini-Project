@@ -7,12 +7,14 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { getAllEvents } from '../api/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import AnimatedCard from '../components/AnimatedCard';
 
 /**
  * CalendarScreen Component
@@ -177,16 +179,17 @@ const CalendarScreen = ({ navigation }) => {
   };
 
   // Render event card
-  const renderEventCard = (event) => {
+  const renderEventCard = (event, index) => {
     const categoryColor = getCategoryColor(event.category);
     const isPast = new Date(event.date) < new Date();
 
     return (
-      <TouchableOpacity
+      <AnimatedCard
         key={event._id}
-        style={[styles.eventCard, isPast && styles.pastEventCard]}
+        index={index}
+        delay={70}
         onPress={() => handleEventPress(event._id)}
-        activeOpacity={0.7}
+        style={[styles.eventCard, isPast && styles.pastEventCard]}
       >
         {/* Event Header */}
         <View style={styles.eventHeader}>
@@ -227,7 +230,7 @@ const CalendarScreen = ({ navigation }) => {
             {event.category}
           </Text>
         </View>
-      </TouchableOpacity>
+      </AnimatedCard>
     );
   };
 
@@ -303,6 +306,7 @@ const CalendarScreen = ({ navigation }) => {
             {/* Events List */}
             {loading ? (
               <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={COLORS.PRIMARY} />
                 <Text style={styles.loadingText}>Loading events...</Text>
               </View>
             ) : eventsForSelectedDate.length > 0 ? (
@@ -310,7 +314,7 @@ const CalendarScreen = ({ navigation }) => {
                 <Text style={styles.eventsCount}>
                   {eventsForSelectedDate.length} {eventsForSelectedDate.length === 1 ? 'Event' : 'Events'}
                 </Text>
-                {eventsForSelectedDate.map(renderEventCard)}
+                {eventsForSelectedDate.map((event, index) => renderEventCard(event, index))}
               </View>
             ) : (
               <View style={styles.emptyState}>
@@ -453,10 +457,12 @@ const styles = StyleSheet.create({
   loadingContainer: {
     padding: SPACING.xl,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   loadingText: {
     fontSize: 14,
     color: COLORS.textSecondary,
+    marginTop: SPACING.MD,
   },
   emptyState: {
     alignItems: 'center',

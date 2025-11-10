@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { getAllEvents, rsvpEvent, cancelRSVP, updateEventStatus } from '../api/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import AnimatedCard from '../components/AnimatedCard';
 
 const { width } = Dimensions.get('window');
 
@@ -428,13 +429,15 @@ const DashboardScreen = ({ navigation }) => {
             <Text style={styles.loadingText}>Loading events...</Text>
           </View>
         ) : getFilteredEvents().length > 0 ? (
-          getFilteredEvents().map((event) => {
+          getFilteredEvents().map((event, index) => {
             console.log('Event RSVP Status:', event.title, 'hasRSVP:', event.hasRSVP);
             return (
-            <TouchableOpacity
+            <AnimatedCard
               key={event._id}
-              style={styles.eventCard}
+              index={index}
+              delay={80}
               onPress={() => handleEventPress(event)}
+              style={styles.eventCard}
             >
               <View style={styles.eventCardHeader}>
                 <View style={styles.badgeRow}>
@@ -559,7 +562,7 @@ const DashboardScreen = ({ navigation }) => {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </TouchableOpacity>
+            </AnimatedCard>
             );
           })
         ) : (
