@@ -17,7 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
-import { createEvent, uploadEventImage } from '../api/api';
+import { createEvent, uploadEventImage, updateEvent } from '../api/api';
 
 const CATEGORIES = [
   'Technology',
@@ -31,27 +31,31 @@ const CATEGORIES = [
   'Other',
 ];
 
-const CreateEventScreen = ({ navigation }) => {
+const CreateEventScreen = ({ navigation, route }) => {
+  const eventId = route.params?.eventId;
+  const eventData = route.params?.eventData;
+  const isEditMode = !!eventId;
+  
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    date: new Date(),
-    time: '',
-    location: '',
-    organizer: '',
-    category: 'Technology',
-    maxAttendees: '',
+    title: eventData?.title || '',
+    description: eventData?.description || '',
+    date: eventData?.date ? new Date(eventData.date) : new Date(),
+    time: eventData?.time || '',
+    location: eventData?.location || '',
+    organizer: eventData?.organizer || '',
+    category: eventData?.category || 'Technology',
+    maxAttendees: eventData?.capacity?.toString() || '',
     rsvpRequired: true,
     isPublic: true,
     tags: '',
-    image: null, // Will store Cloudinary URL
+    image: eventData?.image || null, // Will store Cloudinary URL
   });
   
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null); // Local image URI for preview
+  const [selectedImage, setSelectedImage] = useState(eventData?.image || null); // Local image URI for preview
 
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
@@ -217,7 +221,7 @@ const CreateEventScreen = ({ navigation }) => {
     try {
       setLoading(true);
       
-      const eventData = {
+      const eventPayload = {
         title: formData.title.trim(),
         description: formData.description.trim(),
         date: formData.date.toISOString(),
@@ -225,28 +229,41 @@ const CreateEventScreen = ({ navigation }) => {
         location: formData.location.trim(),
         organizer: formData.organizer.trim(),
         category: formData.category,
-        maxAttendees: parseInt(formData.maxAttendees),
+        capacity: parseInt(formData.maxAttendees),
         rsvpRequired: formData.rsvpRequired,
         isPublic: formData.isPublic,
         tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
         image: formData.image, // Include Cloudinary URL
       };
 
-      await createEvent(eventData);
-      
-      Alert.alert(
-        'Success',
-        'Event created successfully!',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+      if (isEditMode) {
+        await updateEvent(eventId, eventPayload);
+        Alert.alert(
+          'Success',
+          'Event updated successfully!',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]
+        );
+      } else {
+        await createEvent(eventPayload);
+        Alert.alert(
+          'Success',
+          'Event created successfully!',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]
+        );
+      }
     } catch (error) {
-      console.error('Error creating event:', error);
-      Alert.alert('Error', error.message || 'Failed to create event');
+      console.error(`Error ${isEditMode ? 'updating' : 'creating'} event:`, error);
+      Alert.alert('Error', error.message || `Failed to ${isEditMode ? 'update' : 'create'} event`);
     } finally {
       setLoading(false);
     }
@@ -258,7 +275,7 @@ const CreateEventScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={COLORS.TEXT_DARK} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Create Event</Text>
+        <Text style={styles.headerTitle}>{isEditMode ? 'Edit Event' : 'Create Event'}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -472,7 +489,10 @@ const CreateEventScreen = ({ navigation }) => {
 
           {/* Submit Button */}
           <Button
-            title={loading ? 'Creating Event...' : 'Create Event'}
+            title={loading 
+              ? (isEditMode ? 'Updating Event...' : 'Creating Event...') 
+              : (isEditMode ? 'Update Event' : 'Create Event')
+            }
             onPress={handleSubmit}
             disabled={loading}
             style={styles.submitButton}

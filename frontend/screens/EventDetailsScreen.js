@@ -35,6 +35,15 @@ const EventDetailsScreen = ({ route, navigation }) => {
     loadEventDetails();
   }, [eventId]);
 
+  // Refresh event details when screen comes into focus (after editing)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadEventDetails();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
   const loadUser = async () => {
     try {
       const userData = await AsyncStorage.getItem('userData');
@@ -163,6 +172,18 @@ const EventDetailsScreen = ({ route, navigation }) => {
             <TouchableOpacity style={styles.headerButton} onPress={handleShare}>
               <Ionicons name="share-social" size={24} color={COLORS.TEXT_DARK} />
             </TouchableOpacity>
+            
+            {isAdmin && (
+              <TouchableOpacity 
+                style={styles.headerButton} 
+                onPress={() => navigation.navigate('CreateEvent', { 
+                  eventId: event._id,
+                  eventData: event
+                })}
+              >
+                <Ionicons name="create-outline" size={24} color={COLORS.PRIMARY} />
+              </TouchableOpacity>
+            )}
             
             {canEdit && (
               <TouchableOpacity style={styles.headerButton} onPress={handleDelete}>
