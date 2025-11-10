@@ -131,6 +131,7 @@ const MyEventsScreen = ({ navigation }) => {
           </View>
           {isPast && (
             <View style={styles.completedBadge}>
+              <Ionicons name="checkmark-circle" size={14} color={COLORS.SUCCESS} />
               <Text style={styles.completedText}>Completed</Text>
             </View>
           )}
@@ -181,9 +182,10 @@ const MyEventsScreen = ({ navigation }) => {
                   showQRTicket: true 
                 });
               }}
+              activeOpacity={0.8}
             >
-              <Ionicons name="qr-code-outline" size={18} color={COLORS.PRIMARY} />
-              <Text style={styles.ticketButtonText}>Ticket</Text>
+              <Ionicons name="qr-code" size={18} color={COLORS.WHITE} />
+              <Text style={styles.ticketButtonText}>View Ticket</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -225,9 +227,14 @@ const MyEventsScreen = ({ navigation }) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS.TEXT} />
+          <Ionicons name="arrow-back" size={24} color={COLORS.TEXT_DARK} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Events</Text>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>My Events</Text>
+          <Text style={styles.headerSubtitle}>
+            {filteredEvents.length} {filteredEvents.length === 1 ? 'event' : 'events'}
+          </Text>
+        </View>
         <View style={styles.placeholder} />
       </View>
 
@@ -236,7 +243,13 @@ const MyEventsScreen = ({ navigation }) => {
         <TouchableOpacity
           style={[styles.tab, activeTab === 'upcoming' && styles.activeTab]}
           onPress={() => setActiveTab('upcoming')}
+          activeOpacity={0.7}
         >
+          <Ionicons 
+            name={activeTab === 'upcoming' ? 'calendar' : 'calendar-outline'} 
+            size={20} 
+            color={activeTab === 'upcoming' ? COLORS.PRIMARY : COLORS.TEXT_LIGHT} 
+          />
           <Text style={[styles.tabText, activeTab === 'upcoming' && styles.activeTabText]}>
             Upcoming
           </Text>
@@ -246,7 +259,13 @@ const MyEventsScreen = ({ navigation }) => {
         <TouchableOpacity
           style={[styles.tab, activeTab === 'past' && styles.activeTab]}
           onPress={() => setActiveTab('past')}
+          activeOpacity={0.7}
         >
+          <Ionicons 
+            name={activeTab === 'past' ? 'checkmark-done-circle' : 'checkmark-done-circle-outline'} 
+            size={20} 
+            color={activeTab === 'past' ? COLORS.PRIMARY : COLORS.TEXT_LIGHT} 
+          />
           <Text style={[styles.tabText, activeTab === 'past' && styles.activeTabText]}>
             Past
           </Text>
@@ -279,11 +298,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.LG,
+    paddingTop: SPACING.MD*4,
+    paddingBottom: SPACING.LG,
     backgroundColor: COLORS.WHITE,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER,
+    ...SHADOWS.SMALL,
   },
   backButton: {
     width: 40,
@@ -293,10 +312,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: COLORS.TEXT,
+    color: COLORS.TEXT_DARK,
+    letterSpacing: 0.3,
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    color: COLORS.TEXT_LIGHT,
+    marginTop: 2,
   },
   placeholder: {
     width: 40,
@@ -304,22 +333,26 @@ const styles = StyleSheet.create({
   tabsContainer: {
     flexDirection: 'row',
     backgroundColor: COLORS.WHITE,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER,
+    paddingHorizontal: SPACING.SM,
+    paddingTop: SPACING.SM,
   },
   tab: {
     flex: 1,
-    paddingVertical: SPACING.md,
+    flexDirection: 'row',
+    paddingVertical: SPACING.MD,
     alignItems: 'center',
+    justifyContent: 'center',
     position: 'relative',
+    gap: SPACING.XS,
   },
   activeTab: {
     // Active tab styling
   },
   tabText: {
     fontSize: 15,
-    fontWeight: '500',
-    color: COLORS.TEXT_SECONDARY,
+    fontWeight: '600',
+    color: COLORS.TEXT_LIGHT,
+    letterSpacing: 0.2,
   },
   activeTabText: {
     color: COLORS.PRIMARY,
@@ -328,74 +361,82 @@ const styles = StyleSheet.create({
   tabIndicator: {
     position: 'absolute',
     bottom: 0,
-    left: 0,
-    right: 0,
+    left: SPACING.MD,
+    right: SPACING.MD,
     height: 3,
     backgroundColor: COLORS.PRIMARY,
-    borderTopLeftRadius: 3,
-    borderTopRightRadius: 3,
+    borderRadius: RADIUS.SM,
   },
   listContainer: {
-    padding: SPACING.md,
+    padding: SPACING.LG,
+    paddingTop: SPACING.MD,
     flexGrow: 1,
   },
   eventCard: {
     backgroundColor: COLORS.WHITE,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    ...SHADOWS.md,
+    borderRadius: RADIUS.XL,
+    padding: SPACING.LG,
+    marginBottom: SPACING.MD,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER + '80',
+    ...SHADOWS.SMALL,
   },
   pastEventCard: {
-    opacity: 0.7,
+    opacity: 0.65,
+    borderColor: COLORS.BORDER + '40',
   },
   eventHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.MD,
   },
   categoryBadge: {
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
-    borderRadius: RADIUS.sm,
+    paddingHorizontal: SPACING.MD,
+    paddingVertical: 6,
+    borderRadius: RADIUS.MD,
   },
   categoryText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   completedBadge: {
-    backgroundColor: COLORS.TEXT_SECONDARY + '20',
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
-    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.SUCCESS + '15',
+    paddingHorizontal: SPACING.SM,
+    paddingVertical: 6,
+    borderRadius: RADIUS.MD,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   completedText: {
     fontSize: 11,
-    color: COLORS.TEXT_SECONDARY,
-    fontWeight: '600',
+    color: COLORS.SUCCESS,
+    fontWeight: '700',
   },
   eventTitle: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: 'bold',
-    color: COLORS.TEXT,
-    marginBottom: SPACING.sm,
+    color: COLORS.TEXT_DARK,
+    marginBottom: SPACING.MD,
+    lineHeight: 26,
   },
   pastEventTitle: {
     color: COLORS.TEXT_SECONDARY,
   },
   eventDetails: {
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.MD,
+    gap: SPACING.XS,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
   },
   detailText: {
     fontSize: 14,
     color: COLORS.TEXT,
-    marginLeft: SPACING.xs,
+    marginLeft: SPACING.SM,
     flex: 1,
   },
   pastDetailText: {
@@ -405,32 +446,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: SPACING.sm,
+    paddingTop: SPACING.MD,
     borderTopWidth: 1,
-    borderTopColor: COLORS.BORDER,
+    borderTopColor: COLORS.BORDER + '60',
+    marginTop: SPACING.XS,
   },
   attendeeInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: COLORS.BACKGROUND,
+    paddingHorizontal: SPACING.SM,
+    paddingVertical: 6,
+    borderRadius: RADIUS.MD,
   },
   attendeeText: {
     fontSize: 13,
-    color: COLORS.TEXT_SECONDARY,
-    marginLeft: SPACING.xs,
+    color: COLORS.TEXT,
+    marginLeft: SPACING.XS,
+    fontWeight: '600',
   },
   ticketButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.PRIMARY + '10',
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 6,
-    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.PRIMARY,
+    paddingHorizontal: SPACING.MD + 4,
+    paddingVertical: SPACING.SM + 2,
+    borderRadius: RADIUS.MD,
+    gap: 6,
+    ...SHADOWS.SMALL,
   },
   ticketButtonText: {
     fontSize: 13,
-    color: COLORS.PRIMARY,
-    fontWeight: '600',
-    marginLeft: 4,
+    color: COLORS.WHITE,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   emptyContainer: {
     flex: 1,
