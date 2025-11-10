@@ -639,17 +639,17 @@ exports.registerPushToken = async (req, res) => {
       });
     }
 
-    // Update student's push token
-    const student = await Student.findByIdAndUpdate(
+    // Update user's push token (works for both students and admins)
+    const user = await Student.findByIdAndUpdate(
       req.user.id,
       { expoPushToken },
       { new: true, runValidators: true }
     ).select('-password');
 
-    if (!student) {
+    if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'Student not found'
+        message: 'User not found'
       });
     }
 
@@ -657,7 +657,7 @@ exports.registerPushToken = async (req, res) => {
       success: true,
       message: 'Push token registered successfully',
       data: {
-        expoPushToken: student.expoPushToken
+        expoPushToken: user.expoPushToken
       }
     });
 

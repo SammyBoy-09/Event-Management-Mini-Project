@@ -74,8 +74,6 @@ export async function registerForPushNotificationsAsync() {
  */
 export async function sendPushTokenToBackend(token) {
   try {
-    console.log('Attempting to register push token with backend...');
-    console.log('Token:', token);
     const response = await api.post('/auth/register-push-token', {
       expoPushToken: token,
     });
@@ -84,18 +82,9 @@ export async function sendPushTokenToBackend(token) {
       console.log('✅ Push token registered with backend');
       return true;
     }
-    console.log('⚠️ Backend response was not successful:', response.data);
     return false;
   } catch (error) {
-    console.error('❌ Error registering push token with backend:', error);
-    console.error('Error details:', {
-      message: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      url: error.config?.url,
-      baseURL: error.config?.baseURL,
-      fullURL: error.config?.baseURL + error.config?.url
-    });
+    console.error('❌ Error registering push token:', error.message);
     return false;
   }
 }
