@@ -8,20 +8,28 @@ import {
   Alert,
   RefreshControl,
   ScrollView,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme';
-import api, { getAuthData } from '../api/api';
+import api, { getAuthData, updateEventStatus } from '../api/api';
+import Button from '../components/Button';
 
 /**
  * Admin Panel Screen
  * Allows admins to approve/reject pending events
  */
 const AdminPanelScreen = ({ navigation }) => {
-  const [pendingEvents, setPendingEvents] = useState([]);
+  const [allEvents, setAllEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userData, setUserData] = useState(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [selectedEventId, setSelectedEventId] = useState(null);
+  const [activeFilter, setActiveFilter] = useState('all');
 
   useEffect(() => {
     checkAdminAccess();
@@ -39,7 +47,7 @@ const AdminPanelScreen = ({ navigation }) => {
       
       if (userData?.role === 'admin' || userData?.role === 'cr') {
         console.log('Admin Panel - Access Granted');
-        loadPendingEvents();
+        loadAllEvents();
       } else {
         console.log('Admin Panel - Access Denied, Role:', userData?.role);
         setLoading(false);
@@ -51,20 +59,46 @@ const AdminPanelScreen = ({ navigation }) => {
   };
 
   /**
-   * Load pending events from API
+   * Load all events from API
    */
-  const loadPendingEvents = async () => {
+  const loadAllEvents = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/events?status=pending');
-      console.log('AdminPanel - Pending events response:', response.data);
-      setPendingEvents(response.data.data || response.data.events || []);
+      const response = await api.get('/events');
+      console.log('AdminPanel - All events response:', response.data);
+      const events = response.data.data || response.data.events || [];
+      setAllEvents(events);
+      applyFilter('all', events);
     } catch (error) {
-      console.error('Error loading pending events:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to load pending events');
+      console.error('Error loading events:', error);
+      Alert.alert('Error', error.response?.data?.message || 'Failed to load events');
     } finally {
       setLoading(false);
     }
+  };
+
+  /**
+   * Apply filter to events
+   */
+  const applyFilter = (filter, events = allEvents) => {
+    setActiveFilter(filter);
+    if (filter === 'all') {
+      setFilteredEvents(events);
+    } else {
+      setFilteredEvents(events.filter(event => event.status === filter));
+    }
+  };
+
+  /**
+   * Get count for each status
+   */
+  const getStatusCounts = () => {
+    return {
+      all: allEvents.length,
+      pending: allEvents.filter(e => e.status === 'pending').length,
+      approved: allEvents.filter(e => e.status === 'approved').length,
+      rejected: allEvents.filter(e => e.status === 'rejected').length,
+    };
   };
 
   /**
@@ -72,57 +106,143 @@ const AdminPanelScreen = ({ navigation }) => {
    */
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadPendingEvents();
+    await loadAllEvents();
     setRefreshing(false);
   };
 
   /**
-   * Approve an event
+   * Update event status
    */
-  const handleApprove = async (eventId) => {
+  const handleStatusChange = async (eventId, newStatus, currentStatus) => {
+    // If changing to rejected, show modal
+    if (newStatus === 'rejected') {
+      setSelectedEventId(eventId);
+      setRejectionReason('');
+      setShowRejectModal(true);
+      return;
+    }
+
+    // For other status changes, update directly
     try {
-      await api.put(`/events/${eventId}/approve`);
+      await updateEventStatus(eventId, newStatus);
       
-      // Remove from pending list
-      setPendingEvents(prev => prev.filter(event => event._id !== eventId));
+      // Update the event in the list
+      setAllEvents(prev => 
+        prev.map(event => 
+          event._id === eventId 
+            ? { ...event, status: newStatus }
+            : event
+        )
+      );
       
-      Alert.alert('Success', 'Event approved successfully!');
+      // Reapply filter
+      applyFilter(activeFilter);
+      
+      const statusLabel = newStatus === 'approved' ? 'approved' : 'moved to pending';
+      Alert.alert('Success', `Event ${statusLabel} successfully!`);
     } catch (error) {
-      console.error('Error approving event:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to approve event');
+      console.error('Error updating event status:', error);
+      Alert.alert('Error', error.message || 'Failed to update event status');
     }
   };
 
   /**
-   * Reject an event
+   * Confirm rejection with reason
    */
-  const handleReject = (eventId) => {
-    Alert.alert(
-      'Reject Event',
-      'Are you sure you want to reject this event?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reject',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.put(`/events/${eventId}/reject`, {
-                reason: 'Event does not meet guidelines'
-              });
-              
-              // Remove from pending list
-              setPendingEvents(prev => prev.filter(event => event._id !== eventId));
-              
-              Alert.alert('Event Rejected', 'Event has been rejected');
-            } catch (error) {
-              console.error('Error rejecting event:', error);
-              Alert.alert('Error', error.response?.data?.message || 'Failed to reject event');
-            }
-          },
-        },
-      ]
-    );
+  const confirmReject = async () => {
+    try {
+      await updateEventStatus(selectedEventId, 'rejected', rejectionReason || null);
+      
+      // Update the event in the list
+      setAllEvents(prev => 
+        prev.map(event => 
+          event._id === selectedEventId 
+            ? { ...event, status: 'rejected', rejectionReason: rejectionReason || null }
+            : event
+        )
+      );
+      
+      // Reapply filter
+      applyFilter(activeFilter);
+      
+      setShowRejectModal(false);
+      setRejectionReason('');
+      setSelectedEventId(null);
+      
+      Alert.alert('Success', 'Event has been rejected');
+    } catch (error) {
+      console.error('Error rejecting event:', error);
+      Alert.alert('Error', error.message || 'Failed to reject event');
+    }
+  };
+
+  /**
+   * Get action buttons based on current status
+   */
+  const getActionButtons = (event) => {
+    const { status, _id } = event;
+    
+    if (status === 'pending') {
+      return (
+        <>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.approveButton]}
+            onPress={() => handleStatusChange(_id, 'approved', status)}
+          >
+            <Ionicons name="checkmark-circle" size={18} color="#FFF" />
+            <Text style={styles.actionButtonText}>Approve</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.actionButton, styles.rejectButton]}
+            onPress={() => handleStatusChange(_id, 'rejected', status)}
+          >
+            <Ionicons name="close-circle" size={18} color="#FFF" />
+            <Text style={styles.actionButtonText}>Reject</Text>
+          </TouchableOpacity>
+        </>
+      );
+    } else if (status === 'approved') {
+      return (
+        <>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.pendingButton]}
+            onPress={() => handleStatusChange(_id, 'pending', status)}
+          >
+            <Ionicons name="time" size={18} color="#FFF" />
+            <Text style={styles.actionButtonText}>Revert</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.actionButton, styles.rejectButton]}
+            onPress={() => handleStatusChange(_id, 'rejected', status)}
+          >
+            <Ionicons name="close-circle" size={18} color="#FFF" />
+            <Text style={styles.actionButtonText}>Reject</Text>
+          </TouchableOpacity>
+        </>
+      );
+    } else if (status === 'rejected') {
+      return (
+        <>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.pendingButton]}
+            onPress={() => handleStatusChange(_id, 'pending', status)}
+          >
+            <Ionicons name="time" size={18} color="#FFF" />
+            <Text style={styles.actionButtonText}>Revert</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.actionButton, styles.approveButton]}
+            onPress={() => handleStatusChange(_id, 'approved', status)}
+          >
+            <Ionicons name="checkmark-circle" size={18} color="#FFF" />
+            <Text style={styles.actionButtonText}>Approve</Text>
+          </TouchableOpacity>
+        </>
+      );
+    }
   };
 
   /**
@@ -154,73 +274,82 @@ const AdminPanelScreen = ({ navigation }) => {
   };
 
   /**
+   * Get status badge style
+   */
+  const getStatusBadgeStyle = (status) => {
+    switch (status) {
+      case 'pending':
+        return { bg: '#FFF4E5', text: '#F6AD55', icon: 'time' };
+      case 'approved':
+        return { bg: '#E6F7ED', text: '#48BB78', icon: 'checkmark-circle' };
+      case 'rejected':
+        return { bg: '#FEE', text: '#F56565', icon: 'close-circle' };
+      default:
+        return { bg: '#F0F0F0', text: '#666', icon: 'help-circle' };
+    }
+  };
+
+  /**
    * Render individual event card
    */
-  const renderEventItem = ({ item }) => (
-    <View style={styles.eventCard}>
-      <View style={styles.eventHeader}>
-        <Text style={styles.eventTitle} numberOfLines={2}>{item.title}</Text>
-        <View style={styles.statusBadge}>
-          <Text style={styles.statusText}>{item.status}</Text>
-        </View>
-      </View>
-      
-      <Text style={styles.eventDescription} numberOfLines={3}>
-        {item.description}
-      </Text>
-      
-      <View style={styles.eventDetails}>
-        <View style={styles.detailItem}>
-          <Ionicons name="calendar-outline" size={16} color="#666" />
-          <Text style={styles.detailText}>
-            {formatDate(item.date)} at {formatTime(item.time)}
-          </Text>
-        </View>
-        
-        <View style={styles.detailItem}>
-          <Ionicons name="location-outline" size={16} color="#666" />
-          <Text style={styles.detailText}>{item.location}</Text>
-        </View>
-        
-        <View style={styles.detailItem}>
-          <Ionicons name="pricetag-outline" size={16} color="#666" />
-          <Text style={styles.detailText}>{item.category}</Text>
-        </View>
-
-        {item.createdBy?.name && (
-          <View style={styles.detailItem}>
-            <Ionicons name="person-outline" size={16} color="#666" />
-            <Text style={styles.detailText}>Created by: {item.createdBy.name}</Text>
+  const renderEventItem = ({ item }) => {
+    const statusStyle = getStatusBadgeStyle(item.status);
+    
+    return (
+      <View style={styles.eventCard}>
+        <View style={styles.eventHeader}>
+          <Text style={styles.eventTitle} numberOfLines={2}>{item.title}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
+            <Ionicons name={statusStyle.icon} size={14} color={statusStyle.text} />
+            <Text style={[styles.statusText, { color: statusStyle.text }]}>
+              {item.status.toUpperCase()}
+            </Text>
           </View>
-        )}
-      </View>
-      
-      <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={[styles.button, styles.outlineButton]}
-          onPress={() => navigation.navigate('EventDetails', { eventId: item._id })}
-        >
-          <Text style={styles.outlineButtonText}>View Details</Text>
-        </TouchableOpacity>
+        </View>
         
-        <TouchableOpacity
-          style={[styles.button, styles.approveButton]}
-          onPress={() => handleApprove(item._id)}
-        >
-          <Ionicons name="checkmark-circle" size={18} color="#FFF" />
-          <Text style={styles.buttonText}>Approve</Text>
-        </TouchableOpacity>
+        <Text style={styles.eventDescription} numberOfLines={2}>
+          {item.description}
+        </Text>
         
-        <TouchableOpacity
-          style={[styles.button, styles.rejectButton]}
-          onPress={() => handleReject(item._id)}
-        >
-          <Ionicons name="close-circle" size={18} color="#FFF" />
-          <Text style={styles.buttonText}>Reject</Text>
-        </TouchableOpacity>
+        <View style={styles.eventDetails}>
+          <View style={styles.detailItem}>
+            <Ionicons name="calendar-outline" size={16} color="#666" />
+            <Text style={styles.detailText}>
+              {formatDate(item.date)} at {formatTime(item.time)}
+            </Text>
+          </View>
+          
+          <View style={styles.detailItem}>
+            <Ionicons name="location-outline" size={16} color="#666" />
+            <Text style={styles.detailText}>{item.location}</Text>
+          </View>
+          
+          <View style={styles.detailItem}>
+            <Ionicons name="pricetag-outline" size={16} color="#666" />
+            <Text style={styles.detailText}>{item.category}</Text>
+          </View>
+
+          {item.createdBy?.name && (
+            <View style={styles.detailItem}>
+              <Ionicons name="person-outline" size={16} color="#666" />
+              <Text style={styles.detailText}>Created by: {item.createdBy.name}</Text>
+            </View>
+          )}
+        </View>
+        
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.viewDetailsButton]}
+            onPress={() => navigation.navigate('EventDetails', { eventId: item._id })}
+          >
+            <Text style={styles.viewDetailsButtonText}>View Details</Text>
+          </TouchableOpacity>
+          
+          {getActionButtons(item)}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   // Show access denied screen if not admin
   if (!loading && userData?.role !== 'admin' && userData?.role !== 'cr') {
@@ -289,28 +418,103 @@ const AdminPanelScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Stats Header */}
-      <View style={styles.statsHeader}>
-        <View style={styles.statCard}>
-          <Ionicons name="time-outline" size={24} color="#FF6B35" />
-          <Text style={styles.statNumber}>{pendingEvents.length}</Text>
-          <Text style={styles.statLabel}>Pending Approval</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Ionicons name="shield-checkmark-outline" size={24} color="#4ECDC4" />
-          <Text style={styles.statNumber}>{userData?.role?.toUpperCase()}</Text>
-          <Text style={styles.statLabel}>Your Role</Text>
-        </View>
+      {/* Filter Tabs */}
+      <View style={styles.filterContainer}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterScrollContent}
+        >
+          <TouchableOpacity
+            style={[
+              styles.filterTab, 
+              activeFilter === 'all' && { backgroundColor: '#6C63FF' }
+            ]}
+            onPress={() => applyFilter('all')}
+          >
+            <Ionicons 
+              name="apps" 
+              size={16} 
+              color={activeFilter === 'all' ? '#FFF' : '#6C63FF'} 
+            />
+            <Text style={[
+              styles.filterTabText, 
+              activeFilter === 'all' && styles.filterTabTextActive
+            ]}>
+              All ({getStatusCounts().all})
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[
+              styles.filterTab, 
+              activeFilter === 'pending' && { backgroundColor: '#F6AD55' }
+            ]}
+            onPress={() => applyFilter('pending')}
+          >
+            <Ionicons 
+              name="time" 
+              size={16} 
+              color={activeFilter === 'pending' ? '#FFF' : '#F6AD55'} 
+            />
+            <Text style={[
+              styles.filterTabText, 
+              activeFilter === 'pending' && styles.filterTabTextActive
+            ]}>
+              Pending ({getStatusCounts().pending})
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[
+              styles.filterTab, 
+              activeFilter === 'approved' && { backgroundColor: '#48BB78' }
+            ]}
+            onPress={() => applyFilter('approved')}
+          >
+            <Ionicons 
+              name="checkmark-circle" 
+              size={16} 
+              color={activeFilter === 'approved' ? '#FFF' : '#48BB78'} 
+            />
+            <Text style={[
+              styles.filterTabText, 
+              activeFilter === 'approved' && styles.filterTabTextActive
+            ]}>
+              Approved ({getStatusCounts().approved})
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[
+              styles.filterTab, 
+              activeFilter === 'rejected' && { backgroundColor: '#F56565' }
+            ]}
+            onPress={() => applyFilter('rejected')}
+          >
+            <Ionicons 
+              name="close-circle" 
+              size={16} 
+              color={activeFilter === 'rejected' ? '#FFF' : '#F56565'} 
+            />
+            <Text style={[
+              styles.filterTabText, 
+              activeFilter === 'rejected' && styles.filterTabTextActive
+            ]}>
+              Rejected ({getStatusCounts().rejected})
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
 
       {loading ? (
         <View style={styles.loadingContainer}>
           <Ionicons name="hourglass-outline" size={48} color="#6C63FF" />
-          <Text style={styles.loadingText}>Loading pending events...</Text>
+          <Text style={styles.loadingText}>Loading events...</Text>
         </View>
       ) : (
         <FlatList
-          data={pendingEvents}
+          data={filteredEvents}
           renderItem={renderEventItem}
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContainer}
@@ -324,19 +528,66 @@ const AdminPanelScreen = ({ navigation }) => {
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="checkmark-circle-outline" size={64} color="#4ECDC4" />
-              <Text style={styles.emptyTitle}>All Caught Up!</Text>
+              <Ionicons name="folder-open-outline" size={64} color="#CBD5E0" />
+              <Text style={styles.emptyTitle}>No Events Found</Text>
               <Text style={styles.emptyText}>
-                No events pending approval at the moment.
-              </Text>
-              <Text style={styles.emptySubtext}>
-                New event submissions will appear here for review.
+                {activeFilter === 'all' 
+                  ? 'No events have been created yet.'
+                  : `No ${activeFilter} events at the moment.`}
               </Text>
             </View>
           }
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      {/* Rejection Reason Modal */}
+      <Modal
+        visible={showRejectModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowRejectModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Reject Event</Text>
+            <Text style={styles.modalSubtitle}>
+              Please provide a reason for rejection (optional):
+            </Text>
+            
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Enter rejection reason..."
+              placeholderTextColor={COLORS.TEXT_LIGHT}
+              value={rejectionReason}
+              onChangeText={setRejectionReason}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setShowRejectModal(false);
+                  setRejectionReason('');
+                  setSelectedEventId(null);
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.rejectModalButton]}
+                onPress={confirmReject}
+              >
+                <Text style={styles.modalButtonText}>Reject Event</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -366,31 +617,33 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFF',
   },
-  statsHeader: {
-    flexDirection: 'row',
-    paddingHorizontal: SPACING.LG,
-    paddingVertical: SPACING.LG,
-    gap: SPACING.MD,
-  },
-  statCard: {
-    flex: 1,
+  filterContainer: {
     backgroundColor: COLORS.WHITE,
-    borderRadius: RADIUS.MD,
-    padding: SPACING.MD,
+    paddingVertical: SPACING.SM,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.BORDER,
+  },
+  filterScrollContent: {
+    paddingHorizontal: SPACING.LG,
+    gap: SPACING.SM,
+  },
+  filterTab: {
+    flexDirection: 'row',
     alignItems: 'center',
-    ...SHADOWS.SMALL,
+    paddingHorizontal: SPACING.MD,
+    paddingVertical: SPACING.SM,
+    borderRadius: RADIUS.LG,
+    backgroundColor: '#F0F0F0',
+    marginRight: SPACING.SM,
+    gap: 6,
   },
-  statNumber: {
-    fontSize: TYPOGRAPHY.SIZES.XXL,
-    fontWeight: 'bold',
-    color: COLORS.TEXT_DARK,
-    marginTop: SPACING.SM,
+  filterTabText: {
+    fontSize: TYPOGRAPHY.SIZES.SM,
+    fontWeight: '600',
+    color: '#666',
   },
-  statLabel: {
-    fontSize: TYPOGRAPHY.SIZES.XS,
-    color: COLORS.TEXT_LIGHT,
-    marginTop: SPACING.XS,
-    textAlign: 'center',
+  filterTabTextActive: {
+    color: COLORS.WHITE,
   },
   listContainer: {
     padding: SPACING.LG,
@@ -417,13 +670,14 @@ const styles = StyleSheet.create({
     marginRight: SPACING.SM,
   },
   statusBadge: {
-    backgroundColor: COLORS.warning,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: SPACING.SM,
     paddingVertical: 4,
     borderRadius: RADIUS.SM,
+    gap: 4,
   },
   statusText: {
-    color: COLORS.WHITE,
     fontSize: TYPOGRAPHY.SIZES.XS,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -433,7 +687,6 @@ const styles = StyleSheet.create({
     color: COLORS.TEXT,
     lineHeight: 20,
     marginBottom: SPACING.SM,
-    numberOfLines: 3,
   },
   eventDetails: {
     marginBottom: SPACING.MD,
@@ -452,25 +705,35 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     gap: SPACING.SM,
+    marginTop: SPACING.SM,
   },
-  button: {
+  actionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: SPACING.SM,
+    paddingHorizontal: SPACING.SM,
     borderRadius: RADIUS.MD,
-    gap: SPACING.XS,
+    gap: 4,
   },
-  outlineButton: {
+  viewDetailsButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: COLORS.PRIMARY,
   },
-  outlineButtonText: {
+  viewDetailsButtonText: {
     color: COLORS.PRIMARY,
     fontSize: TYPOGRAPHY.SIZES.SM,
     fontWeight: '600',
+  },
+  actionButtonText: {
+    color: COLORS.WHITE,
+    fontSize: TYPOGRAPHY.SIZES.SM,
+    fontWeight: '600',
+  },
+  pendingButton: {
+    backgroundColor: '#F6AD55',
   },
   // QR Scanner Section Styles
   scannerSection: {
@@ -578,6 +841,73 @@ const styles = StyleSheet.create({
   goBackButtonText: {
     color: '#FFF',
     fontSize: 15,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.XL,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: COLORS.WHITE,
+    borderRadius: RADIUS.LG,
+    padding: SPACING.XL,
+    ...SHADOWS.MEDIUM,
+  },
+  modalTitle: {
+    fontSize: TYPOGRAPHY.SIZES.XL,
+    fontWeight: 'bold',
+    color: COLORS.TEXT_DARK,
+    marginBottom: SPACING.SM,
+  },
+  modalSubtitle: {
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    color: COLORS.TEXT_LIGHT,
+    marginBottom: SPACING.LG,
+    lineHeight: 20,
+  },
+  modalInput: {
+    backgroundColor: COLORS.BACKGROUND,
+    borderRadius: RADIUS.MD,
+    padding: SPACING.MD,
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    color: COLORS.TEXT_DARK,
+    minHeight: 100,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    marginBottom: SPACING.LG,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: SPACING.MD,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: SPACING.MD,
+    borderRadius: RADIUS.MD,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButton: {
+    backgroundColor: COLORS.BACKGROUND,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+  },
+  cancelButtonText: {
+    color: COLORS.TEXT_DARK,
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    fontWeight: '500',
+  },
+  rejectModalButton: {
+    backgroundColor: COLORS.ERROR,
+  },
+  modalButtonText: {
+    color: COLORS.WHITE,
+    fontSize: TYPOGRAPHY.SIZES.MD,
     fontWeight: '600',
   },
 });

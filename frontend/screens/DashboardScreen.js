@@ -42,6 +42,11 @@ const DashboardScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('All'); // 'All', 'Today', 'This Week', 'This Month'
   const [availabilityFilter, setAvailabilityFilter] = useState(false); // Show only available spots
+  
+  // Rejection Modal States
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [selectedEventId, setSelectedEventId] = useState(null);
 
   useEffect(() => {
     loadUserData();
@@ -118,48 +123,63 @@ const DashboardScreen = ({ navigation }) => {
 
     const currentStatus = event.status || 'pending';
     
+    // Build dynamic options based on current status
+    const options = [
+      {
+        text: 'Cancel',
+        style: 'cancel'
+      }
+    ];
+
+    // Add available state transitions
+    if (currentStatus !== 'pending') {
+      options.push({
+        text: 'Pending',
+        onPress: () => updateStatus(event._id, 'pending', null)
+      });
+    }
+
+    if (currentStatus !== 'approved') {
+      options.push({
+        text: 'Approved',
+        onPress: () => updateStatus(event._id, 'approved', null)
+      });
+    }
+
+    if (currentStatus !== 'rejected') {
+      options.push({
+        text: 'Rejected',
+        onPress: () => handleRejectEvent(event),
+        style: 'destructive'
+      });
+    }
+    
     Alert.alert(
       'Change Event Status',
       `Current status: ${currentStatus}\nSelect new status:`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: 'Pending',
-          onPress: () => updateStatus(event._id, 'pending', null)
-        },
-        {
-          text: 'Approved',
-          onPress: () => updateStatus(event._id, 'approved', null)
-        },
-        {
-          text: 'Rejected',
-          onPress: () => handleRejectEvent(event),
-          style: 'destructive'
-        }
-      ]
+      options
     );
   };
 
   const handleRejectEvent = (event) => {
-    Alert.prompt(
-      'Reject Event',
-      'Please provide a reason for rejection (optional):',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: 'Reject',
-          onPress: (reason) => updateStatus(event._id, 'rejected', reason),
-          style: 'destructive'
-        }
-      ],
-      'plain-text'
-    );
+    setSelectedEventId(event._id);
+    setRejectionReason('');
+    setShowRejectModal(true);
+  };
+
+  const confirmReject = async () => {
+    if (!selectedEventId) return;
+    
+    try {
+      await updateEventStatus(selectedEventId, 'rejected', rejectionReason || null);
+      Alert.alert('Success', 'Event has been rejected');
+      loadEvents();
+      setShowRejectModal(false);
+      setRejectionReason('');
+      setSelectedEventId(null);
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to reject event');
+    }
   };
 
   const updateStatus = async (eventId, newStatus, rejectionReason = null) => {
@@ -808,6 +828,54 @@ const DashboardScreen = ({ navigation }) => {
         </View>
       </Modal>
 
+      {/* Rejection Reason Modal */}
+      <Modal
+        visible={showRejectModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowRejectModal(false)}
+      >
+        <View style={styles.rejectModalOverlay}>
+          <View style={styles.rejectModalContent}>
+            <Text style={styles.rejectModalTitle}>Reject Event</Text>
+            <Text style={styles.rejectModalSubtitle}>
+              Please provide a reason for rejection (optional):
+            </Text>
+            
+            <TextInput
+              style={styles.rejectModalInput}
+              placeholder="Enter rejection reason..."
+              placeholderTextColor={COLORS.TEXT_LIGHT}
+              value={rejectionReason}
+              onChangeText={setRejectionReason}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+
+            <View style={styles.rejectModalButtons}>
+              <TouchableOpacity
+                style={[styles.rejectModalButton, styles.rejectCancelButton]}
+                onPress={() => {
+                  setShowRejectModal(false);
+                  setRejectionReason('');
+                  setSelectedEventId(null);
+                }}
+              >
+                <Text style={styles.rejectCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.rejectModalButton, styles.rejectConfirmButton]}
+                onPress={confirmReject}
+              >
+                <Text style={styles.rejectModalButtonText}>Reject Event</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </ScrollView>
   );
 };
@@ -1335,6 +1403,75 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.SIZES.MD,
     fontWeight: '600',
     color: COLORS.TEXT,
+  },
+  
+  // Rejection Modal Styles
+  rejectModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.XL,
+  },
+  rejectModalContent: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: COLORS.WHITE,
+    borderRadius: RADIUS.LG,
+    padding: SPACING.XL,
+    ...SHADOWS.MEDIUM,
+  },
+  rejectModalTitle: {
+    fontSize: TYPOGRAPHY.SIZES.XL,
+    fontWeight: 'bold',
+    color: COLORS.TEXT_DARK,
+    marginBottom: SPACING.SM,
+  },
+  rejectModalSubtitle: {
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    color: COLORS.TEXT_LIGHT,
+    marginBottom: SPACING.LG,
+    lineHeight: 20,
+  },
+  rejectModalInput: {
+    backgroundColor: COLORS.BACKGROUND,
+    borderRadius: RADIUS.MD,
+    padding: SPACING.MD,
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    color: COLORS.TEXT_DARK,
+    minHeight: 100,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    marginBottom: SPACING.LG,
+  },
+  rejectModalButtons: {
+    flexDirection: 'row',
+    gap: SPACING.MD,
+  },
+  rejectModalButton: {
+    flex: 1,
+    paddingVertical: SPACING.MD,
+    borderRadius: RADIUS.MD,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rejectCancelButton: {
+    backgroundColor: COLORS.BACKGROUND,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+  },
+  rejectCancelButtonText: {
+    color: COLORS.TEXT_DARK,
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    fontWeight: '500',
+  },
+  rejectConfirmButton: {
+    backgroundColor: COLORS.ERROR,
+  },
+  rejectModalButtonText: {
+    color: COLORS.WHITE,
+    fontSize: TYPOGRAPHY.SIZES.MD,
+    fontWeight: '600',
   },
 });
 
