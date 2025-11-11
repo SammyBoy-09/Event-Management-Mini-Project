@@ -128,24 +128,43 @@ const DashboardScreen = ({ navigation }) => {
         },
         {
           text: 'Pending',
-          onPress: () => updateStatus(event._id, 'pending')
+          onPress: () => updateStatus(event._id, 'pending', null)
         },
         {
           text: 'Approved',
-          onPress: () => updateStatus(event._id, 'approved')
+          onPress: () => updateStatus(event._id, 'approved', null)
         },
         {
           text: 'Rejected',
-          onPress: () => updateStatus(event._id, 'rejected'),
+          onPress: () => handleRejectEvent(event),
           style: 'destructive'
         }
       ]
     );
   };
 
-  const updateStatus = async (eventId, newStatus) => {
+  const handleRejectEvent = (event) => {
+    Alert.prompt(
+      'Reject Event',
+      'Please provide a reason for rejection (optional):',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Reject',
+          onPress: (reason) => updateStatus(event._id, 'rejected', reason),
+          style: 'destructive'
+        }
+      ],
+      'plain-text'
+    );
+  };
+
+  const updateStatus = async (eventId, newStatus, rejectionReason = null) => {
     try {
-      await updateEventStatus(eventId, newStatus);
+      await updateEventStatus(eventId, newStatus, rejectionReason);
       Alert.alert('Success', `Event status changed to ${newStatus}`);
       loadEvents();
     } catch (error) {
@@ -477,6 +496,7 @@ const DashboardScreen = ({ navigation }) => {
                   
                   {/* Status Badge */}
                   {user && (user.role === 'admin' || user.role === 'cr' || user.role === 'CR') ? (
+                    // Admin/CR: Clickable badge to change status
                     <TouchableOpacity
                       style={[
                         styles.statusBadge,
@@ -499,14 +519,35 @@ const DashboardScreen = ({ navigation }) => {
                       </Text>
                     </TouchableOpacity>
                   ) : event.status !== 'approved' && (
-                    <View style={[
-                      styles.statusBadge,
-                      { backgroundColor: getStatusBadgeColor(event.status).bg }
-                    ]}>
+                    // Student: View-only badge for their own pending/rejected events
+                    <TouchableOpacity
+                      style={[
+                        styles.statusBadge,
+                        { backgroundColor: getStatusBadgeColor(event.status).bg }
+                      ]}
+                      onPress={(e) => {
+                        if (event.status === 'rejected' && event.rejectionReason) {
+                          e.stopPropagation();
+                          Alert.alert(
+                            'Event Rejected',
+                            `Reason: ${event.rejectionReason}`,
+                            [{ text: 'OK' }]
+                          );
+                        }
+                      }}
+                    >
+                      <Ionicons 
+                        name={event.status === 'rejected' ? 'close-circle' : 'time'} 
+                        size={14} 
+                        color={getStatusBadgeColor(event.status).text} 
+                      />
                       <Text style={[styles.statusBadgeText, { color: getStatusBadgeColor(event.status).text }]}>
                         {getStatusBadgeColor(event.status).label}
                       </Text>
-                    </View>
+                      {event.status === 'rejected' && event.rejectionReason && (
+                        <Ionicons name="information-circle" size={14} color={getStatusBadgeColor(event.status).text} style={{ marginLeft: 4 }} />
+                      )}
+                    </TouchableOpacity>
                   )}
                 </View>
 

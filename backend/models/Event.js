@@ -97,6 +97,18 @@ const eventSchema = new mongoose.Schema({
     },
     default: 'pending'
   },
+  rejectionReason: {
+    type: String,
+    default: null,
+    trim: true
+  },
+  rejectedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student'
+  },
+  rejectedAt: {
+    type: Date
+  },
   tags: [{
     type: String,
     trim: true

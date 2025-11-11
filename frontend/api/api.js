@@ -325,9 +325,13 @@ export const rejectEvent = async (eventId, reason) => {
 };
 
 // Update event status (Admin only)
-export const updateEventStatus = async (eventId, status, reason = '') => {
+export const updateEventStatus = async (eventId, status, rejectionReason = null) => {
   try {
-    const response = await api.put(`/events/${eventId}/status`, { status, reason });
+    const payload = { status };
+    if (rejectionReason) {
+      payload.rejectionReason = rejectionReason;
+    }
+    const response = await api.put(`/events/${eventId}/status`, payload);
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Failed to update event status' };

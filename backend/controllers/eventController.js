@@ -105,8 +105,13 @@ exports.getAllEvents = async (req, res) => {
       }
       // If no status filter, admins see all events (pending, approved, rejected)
     } else {
-      // Regular users ONLY see approved events (strict moderation)
-      query.status = 'approved';
+      // Regular users see:
+      // 1. All approved events (public)
+      // 2. Their own events regardless of status (pending/rejected)
+      query.$or = [
+        { status: 'approved' },
+        { createdBy: req.student.id }
+      ];
     }
 
     // Search filter
@@ -732,7 +737,7 @@ exports.updateEventStatus = async (req, res) => {
       });
     }
 
-    const { status } = req.body;
+    const { status, rejectionReason } = req.body;
 
     if (!['pending', 'approved', 'rejected'].includes(status)) {
       return res.status(400).json({
@@ -756,6 +761,14 @@ exports.updateEventStatus = async (req, res) => {
     if (status === 'approved') {
       event.approvedBy = req.student.id;
       event.approvedAt = new Date();
+      // Clear rejection data if re-approved
+      event.rejectionReason = null;
+      event.rejectedBy = null;
+      event.rejectedAt = null;
+    } else if (status === 'rejected') {
+      event.rejectionReason = rejectionReason || 'No reason provided';
+      event.rejectedBy = req.student.id;
+      event.rejectedAt = new Date();
     }
 
     await event.save();
@@ -769,7 +782,8 @@ exports.updateEventStatus = async (req, res) => {
         notificationMessage = `Your event "${event.title}" has been approved and is now live!`;
         notificationType = 'event_approval';
       } else if (status === 'rejected') {
-        notificationMessage = `Your event "${event.title}" has been rejected. ${req.body.reason || ''}`;
+        const reason = rejectionReason ? `\n\nReason: ${rejectionReason}` : '';
+        notificationMessage = `Your event "${event.title}" has been rejected.${reason}`;
         notificationType = 'event_rejection';
       } else if (status === 'pending') {
         notificationMessage = `Your event "${event.title}" status has been changed to pending review.`;
