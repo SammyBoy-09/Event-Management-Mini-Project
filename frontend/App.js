@@ -107,6 +107,10 @@ export default function App() {
         if (authToken) {
           await sendPushTokenToBackend(token);
         }
+      } else {
+        // Token registration failed - log but don't block app
+        console.log('ℹ️ Push notifications unavailable. App will continue without push notifications.');
+        console.log('💡 To enable: Use a device with Google Play Services or a Google Play emulator image.');
       }
 
       // Listen for notifications when app is in foreground
@@ -126,6 +130,7 @@ export default function App() {
       });
     } catch (error) {
       console.error('Error setting up push notifications:', error);
+      console.log('ℹ️ App will continue without push notifications.');
     }
   };
 

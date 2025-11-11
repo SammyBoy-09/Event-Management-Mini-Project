@@ -225,12 +225,15 @@ const AdminProfileScreen = ({ navigation }) => {
 
         {/* Profile Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {editMode ? 'Edit Information' : 'Personal Information'}
-          </Text>
+          <View style={styles.sectionHeaderBar}>
+            <Ionicons name="person-circle" size={20} color={COLORS.PRIMARY} />
+            <Text style={styles.sectionTitle}>
+              {editMode ? 'Edit Information' : 'Personal Information'}
+            </Text>
+          </View>
           
           {editMode ? (
-            <>
+            <View style={styles.sectionContent}>
               <InputField
                 label="Name"
                 value={editData.name}
@@ -247,9 +250,9 @@ const AdminProfileScreen = ({ navigation }) => {
               />
               
               <Button title="Save Changes" onPress={handleUpdateProfile} style={styles.button} />
-            </>
+            </View>
           ) : (
-            <>
+            <View style={styles.sectionContent}>
               <InfoRow icon="mail" label="Email" value={profile?.email} />
               <InfoRow icon="call" label="Phone" value={profile?.phone} />
               <InfoRow icon="briefcase" label="Department" value={profile?.department} />
@@ -261,21 +264,24 @@ const AdminProfileScreen = ({ navigation }) => {
                   value={profile.permissions.join(', ')} 
                 />
               )}
-            </>
+            </View>
           )}
         </View>
 
         {/* Change Password */}
         <View style={styles.section}>
           <TouchableOpacity
-            style={styles.sectionHeader}
+            style={styles.sectionHeaderBar}
             onPress={() => setShowPasswordModal(!showPasswordModal)}
           >
-            <Text style={styles.sectionTitle}>Change Password</Text>
+            <View style={styles.sectionHeaderLeft}>
+              <Ionicons name="lock-closed" size={20} color={COLORS.PRIMARY} />
+              <Text style={styles.sectionTitle}>Change Password</Text>
+            </View>
             <Ionicons
               name={showPasswordModal ? 'chevron-up' : 'chevron-down'}
-              size={24}
-              color={COLORS.TEXT_SECONDARY}
+              size={20}
+              color={COLORS.TEXT_LIGHT}
             />
           </TouchableOpacity>
           
@@ -431,12 +437,29 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   section: {
-    backgroundColor: COLORS.SURFACE,
-    marginHorizontal: SPACING.md,
-    marginBottom: SPACING.md,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    ...SHADOWS.small,
+    backgroundColor: COLORS.WHITE,
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.lg,
+    borderRadius: RADIUS.lg,
+    overflow: 'hidden',
+    ...SHADOWS.medium,
+  },
+  sectionHeaderBar: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.BACKGROUND,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 0,
+    borderBottomColor: COLORS.BORDER,
+    gap: SPACING.sm,
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    flex: 1,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -444,23 +467,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.TEXT,
-    marginBottom: SPACING.md,
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.TEXT_DARK,
+    letterSpacing: 0.5,
+  },
+  sectionContent: {
+    padding: SPACING.lg,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: SPACING.sm,
+    paddingVertical: SPACING.md,
+    marginBottom: SPACING.sm,
+    paddingBottom: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER,
+    borderBottomColor: COLORS.BACKGROUND,
   },
   infoIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.PRIMARY + '10',
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: COLORS.PRIMARY + '15',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: SPACING.md,
@@ -469,14 +497,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   infoLabel: {
-    fontSize: 12,
-    color: COLORS.TEXT_SECONDARY,
-    marginBottom: 2,
+    fontSize: 13,
+    color: COLORS.TEXT_LIGHT,
+    marginBottom: 4,
+    fontWeight: '500',
   },
   infoValue: {
     fontSize: 16,
-    color: COLORS.TEXT,
-    fontWeight: '500',
+    color: COLORS.TEXT_DARK,
+    fontWeight: '600',
   },
   passwordForm: {
     marginTop: SPACING.md,

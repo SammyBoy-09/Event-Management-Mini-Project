@@ -39,14 +39,16 @@ export async function registerForPushNotificationsAsync() {
 
     // Get the Expo push token
     try {
-      token = (
-        await Notifications.getExpoPushTokenAsync({
-          projectId: Constants.expoConfig?.extra?.eas?.projectId || Constants.easConfig?.projectId,
-        })
-      ).data;
-      console.log('Expo Push Token:', token);
+      // try with retries in case Google Play services are temporarily unavailable
+      const projectId = Constants.expoConfig?.extra?.eas?.projectId || Constants.easConfig?.projectId;
+      token = await fetchExpoPushTokenWithRetry(projectId);
+      if (token) console.log('Expo Push Token:', token);
     } catch (error) {
       console.error('Error getting push token:', error);
+      // Helpful hint for common Android emulator issue
+      if (error?.message && error.message.includes('SERVICE_NOT_AVAILABLE')) {
+        console.warn('Fetch token failed with SERVICE_NOT_AVAILABLE. On Android emulators ensure you are using a Google Play system image or test on a physical device with Google Play Services.');
+      }
       return null;
     }
   } else {
@@ -65,6 +67,28 @@ export async function registerForPushNotificationsAsync() {
   }
 
   return token;
+}
+
+// Helper: delay
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Helper: try to fetch Expo push token with retries (useful when Play Services briefly unavailable)
+async function fetchExpoPushTokenWithRetry(projectId, retries = 2, delay = 1500) {
+  try {
+    const res = await Notifications.getExpoPushTokenAsync({ projectId });
+    return res?.data ?? null;
+  } catch (err) {
+    const isServiceUnavailable = err?.message && err.message.includes('SERVICE_NOT_AVAILABLE');
+    if (retries > 0 && isServiceUnavailable) {
+      console.warn(`Push token fetch failed (SERVICE_NOT_AVAILABLE). Retrying in ${delay}ms... (${retries} retries left)`);
+      await wait(delay);
+      return fetchExpoPushTokenWithRetry(projectId, retries - 1, delay * 1.5);
+    }
+    // rethrow for the outer handler to catch/log
+    throw err;
+  }
 }
 
 /**

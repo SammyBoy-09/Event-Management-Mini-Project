@@ -10,6 +10,7 @@ import {
   ScrollView,
   Modal,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme';
@@ -509,7 +510,7 @@ const AdminPanelScreen = ({ navigation }) => {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <Ionicons name="hourglass-outline" size={48} color="#6C63FF" />
+          <ActivityIndicator size="large" color="#6C63FF" />
           <Text style={styles.loadingText}>Loading events...</Text>
         </View>
       ) : (
