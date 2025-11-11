@@ -229,7 +229,7 @@ const CreateEventScreen = ({ navigation, route }) => {
         location: formData.location.trim(),
         organizer: formData.organizer.trim(),
         category: formData.category,
-        capacity: parseInt(formData.maxAttendees),
+        maxAttendees: parseInt(formData.maxAttendees),
         rsvpRequired: formData.rsvpRequired,
         isPublic: formData.isPublic,
         tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
