@@ -29,9 +29,29 @@
       "versionCode": 1,
       "permissions": [
         "INTERNET",
-        "ACCESS_NETWORK_STATE"
-      ]
+        "ACCESS_NETWORK_STATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "useNextNotificationsApi": true,
+      "googleServicesFile": "./google-services.json"
     },
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#6C63FF",
+      "androidMode": "default",
+      "androidCollapsedTitle": "#{unread_notifications} new notifications"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#6C63FF",
+          "sounds": ["./assets/notification.wav"]
+        }
+      ]
+    ],
     "web": {},
     "extra": {
       "eas": {
