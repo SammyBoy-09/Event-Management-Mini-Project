@@ -1268,8 +1268,103 @@ The application is currently deployed and ready for use, with a clear roadmap fo
 
 ---
 
+---
+
+## Recent Updates & Improvements (November 2025)
+
+### UI/UX Enhancements
+- **Admin Panel Redesign**
+  - Removed stat cards for cleaner interface
+  - Added colored filter tabs (All, Pending, Approved, Rejected)
+  - Smart status-based action buttons (shows only valid state transitions)
+  - List all events with status badges instead of pending-only
+  - Activity Indicator for loading states
+  
+- **Admin Profile Screen Redesign**
+  - Professional card-based design with section headers
+  - Removed shadows, added subtle borders
+  - Icon badges for information rows
+  - Centered section titles for better hierarchy
+  - Improved spacing and visual structure
+
+- **Dashboard Improvements**
+  - Smart status change modal (excludes current state)
+  - Android-compatible rejection modal with TextInput
+  - Proper rejection reason handling and display
+
+- **MyEvents Screen Polish**
+  - Enhanced header with event count
+  - Tab icons for better navigation
+  - Improved card styling with rounded corners
+  - Better status badge designs
+
+### Cross-Platform Compatibility
+- **Android Compatibility Fixes**
+  - Replaced iOS-only Alert.prompt with Modal components
+  - Custom rejection modal with TextInput (works on all devices)
+  - Proper keyboard handling for Android
+  
+### Push Notifications
+- **Retry Logic & Error Handling**
+  - Added automatic retry (2 attempts) for SERVICE_NOT_AVAILABLE errors
+  - Exponential backoff for retry delays
+  - Graceful fallback when Google Play Services unavailable
+  - Improved error logging with actionable guidance
+  - User-friendly error messages for emulator/device issues
+
+### Bug Fixes
+- **Event Creation Fix**
+  - Fixed maxAttendees field validation error
+  - Proper payload structure alignment with backend
+  
+- **Typography & Styling Fixes**
+  - Fixed TYPOGRAPHY.WEIGHTS undefined errors
+  - Fixed SHADOWS.MD to SHADOWS.MEDIUM references
+  - Removed invalid numberOfLines from style objects
+  
+- **Button Component Fixes**
+  - Fixed height collapse issues
+  - Improved text alignment and centering
+  - Proper icon support with spacing
+  - Removed unnecessary shadows from outline variants
+
+### Feature Additions
+- **Pending/Rejected Events Visibility**
+  - Students can now see their own events regardless of status
+  - Status badges with icons (⏱️ pending, ❌ rejected, ✅ approved)
+  - Clickable rejected badge shows rejection reason
+  - Info icon for events with rejection reasons
+  
+- **Admin Rejection Reason System**
+  - Admins can provide reasons when rejecting events
+  - Rejection metadata stored (reason, rejectedBy, rejectedAt)
+  - Reasons displayed to event creators
+  - Reasons included in notification messages
+
+- **App Logo & Branding**
+  - Custom app icon (icon.png)
+  - Splash screen with logo
+  - Android adaptive icon support
+  - Logo setup documentation and guides
+
+### Navigation Improvements
+- **Profile to MyEvents Navigation**
+  - Made Registered Events section clickable
+  - Direct navigation from Profile to MyEvents screen
+  - Improved user flow
+
+### Code Quality
+- **Architecture Improvements**
+  - Consistent use of theme constants (COLORS, SPACING, RADIUS)
+  - Better component organization
+  - Improved error handling patterns
+  - Cleaner async/await usage
+
+---
+
 **Project Repository:** [github.com/SammyBoy-09/Event-Management-Mini-Project](https://github.com/SammyBoy-09/Event-Management-Mini-Project)  
 **Developer:** Samuel Lazar (SammyBoy-09)  
-**Last Updated:** November 10, 2025  
+**Last Updated:** November 12, 2025  
 **Version:** 1.0.0  
+**Build:** Latest APK with logo and all improvements available
 **License:** MIT
