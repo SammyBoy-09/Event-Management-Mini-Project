@@ -48,11 +48,13 @@ A comprehensive full-stack event management system designed for college campuses
 - 📊 "My Events" - Track created events and RSVPs
 
 **Push Notifications**
+- 🔔 Firebase Cloud Messaging (FCM) v1 API integration
 - 🔔 Automated event reminders (24 hours and 1 hour before)
 - 📣 New event notifications
 - ✅ Event approval/rejection alerts
 - 📢 Event update notifications
 - 🔕 In-app notification center with read/unread status
+- ✅ Production-ready push notifications with google-services.json
 
 **QR Code System**
 - 🎟️ Generate QR code tickets for registered events
@@ -122,11 +124,13 @@ A comprehensive full-stack event management system designed for college campuses
 - 🔔 Notifications on event status changes
 
 **Push Notification Service**
-- 📱 Expo Push Notifications integration
+- 📱 Expo Push Notifications with Firebase Cloud Messaging (FCM) v1 API
+- 🔥 google-services.json configured for production builds
 - 🤖 Automated reminders via cron jobs
 - ⏰ Hourly cron job checks upcoming events
 - 📬 Send notifications to all event attendees
 - 🔕 Handle invalid/expired push tokens
+- ✅ Tested and working on physical devices
 
 **Cron Job Scheduler**
 - ⏱️ Runs every hour (0 * * * *)
@@ -188,7 +192,8 @@ A comprehensive full-stack event management system designed for college campuses
 - **MongoDB Atlas** - Database hosting
 - **Render** - Backend API hosting
 - **Cloudinary** - Image CDN and storage
-- **Expo** - Push notifications and app builds
+- **Firebase** - Push notification infrastructure (FCM v1 API)
+- **Expo** - Push notification delivery and app builds
 
 ## 🏗️ Architecture
 
@@ -611,11 +616,21 @@ const API_BASE_URL = 'http://localhost:5000/api';
 
 // For Physical Device (replace with your computer's IP)
 const API_BASE_URL = 'http://192.168.1.x:5000/api';
+
+// For Production (Render deployment)
+const API_BASE_URL = 'https://event-management-mini-project.onrender.com/api';
 ```
 
 To find your IP address:
 - **Windows:** `ipconfig` in Command Prompt
 - **Mac/Linux:** `ifconfig` in Terminal
+
+2. **Firebase Configuration** (✅ Already configured):
+   - Firebase project: `CampusConnect`
+   - Package name: `com.campusconnect.app`
+   - `google-services.json` placed in `frontend/` directory
+   - FCM configured in `app.json` with notification permissions
+   - Push notifications tested and working on physical devices
 
 ## 🏃 Running the Application
 
@@ -926,37 +941,55 @@ The app uses a professional and modern color scheme:
 | Dark Text | `#2D3748` | Primary text |
 | Light Text | `#A0AEC0` | Secondary text |
 
-## 📱 Screenshots
+## 📱 App Status & Testing
 
-### Landing Page
+### ✅ Production Ready
+- Backend deployed on Render and operational
+- MongoDB Atlas database connected
+- Push notifications configured with Firebase FCM
+- google-services.json integrated for Android builds
+- Tested successfully on physical Android devices
+- All core features working (authentication, events, notifications)
+
+### 📸 Key Screens
+
+**Landing Page**
 - Welcome screen with animated features
 - Login and Register buttons
 
-### Login Screen
+**Login Screen**
 - Email and password fields
 - Form validation
-- Forgot password link
+- Role-based authentication
 
-### Register Screen
+**Register Screen**
 - Comprehensive registration form
 - All student details (Name, USN, Email, etc.)
 - Dropdown selectors for Year, Semester, Gender, Department
 - Password strength validation
 
-### Home Screen
-- User profile card
+**Home Screen**
+- User profile card with statistics
 - Quick action buttons
 - Upcoming events section
-- Statistics cards
+- Real-time event updates
+
+**Admin Panel**
+- Event approval dashboard
+- User management
+- Event statistics
+- QR code scanner for attendance
 
 ## 🔐 Security Features
 
-1. **Password Hashing:** bcryptjs with salt rounds
-2. **JWT Authentication:** Secure token-based auth
-3. **Input Validation:** Server-side and client-side
+1. **Password Hashing:** bcryptjs with 10 salt rounds
+2. **JWT Authentication:** Secure token-based auth with 30-day expiration
+3. **Input Validation:** Comprehensive server-side and client-side validation
 4. **CORS Protection:** Configured for specific origins
-5. **Environment Variables:** Sensitive data in .env
-6. **Error Handling:** No sensitive info in error messages
+5. **Environment Variables:** Sensitive data in .env files
+6. **Error Handling:** No sensitive information exposed in error messages
+7. **Firebase Security:** google-services.json for secure push notifications
+8. **Role-Based Access Control:** Student, CR, and Admin authorization levels
 
 ## 🧪 Testing
 
@@ -1094,14 +1127,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support & Documentation
 
 For detailed guides and troubleshooting:
-- 📖 **[DOCS.md](DOCS.md)** - Complete documentation
 - 🚀 **[GETTING_STARTED.md](GETTING_STARTED.md)** - Setup guide
-- 📦 **[BUILD_APK_GUIDE.md](BUILD_APK_GUIDE.md)** - Build instructions
-- 🏗️ **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture
+- 🚀 **[IMPROVEMENTS_ROADMAP.md](IMPROVEMENTS_ROADMAP.md)** - Future enhancements
+- 📄 **[PROJECT_ABSTRACT.md](PROJECT_ABSTRACT.md)** - Project overview and abstract
 
-**Need help?** Open an issue in the repository!
+**Need help?** Open an issue in the [GitHub repository](https://github.com/SammyBoy-09/Event-Management-Mini-Project)!
 
 ---
 
 **Built with ❤️ for Campus Event Management**  
-*Last Updated: November 9, 2025*
+*Last Updated: November 13, 2025*
+
+### 🎉 Recent Updates
+- ✅ Firebase Cloud Messaging (FCM) configured
+- ✅ Push notifications tested and working on physical devices
+- ✅ Production build ready with all configurations
+- ✅ Repository cleaned up and organized
+- ✅ Documentation updated and streamlined
