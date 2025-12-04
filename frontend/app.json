@@ -2,7 +2,7 @@
   "expo": {
     "name": "CampusConnect",
     "slug": "campusconnect",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/icon.png",
@@ -26,7 +26,7 @@
         "backgroundColor": "#6C63FF"
       },
       "package": "com.campusconnect.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE",
