@@ -33,8 +33,9 @@
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE"
       ],
-      "useNextNotificationsApi": true,
       "googleServicesFile": "./google-services.json",
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
       "config": {
         "googleMobileAdsAppId": "ca-app-pub-3940256099942544~3347511713"
       }
