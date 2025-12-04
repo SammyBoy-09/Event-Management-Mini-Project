@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Button from '../components/Button';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { scheduleLocalNotification } from '../utils/pushNotifications';
 
 const SettingsScreen = ({ navigation }) => {
   const [settings, setSettings] = useState({
@@ -105,6 +106,20 @@ const SettingsScreen = ({ navigation }) => {
         },
       ]
     );
+  };
+
+  const handleTestNotification = async () => {
+    try {
+      await scheduleLocalNotification(
+        '🧪 Test Notification',
+        'This is a test notification to verify the notification system is working!',
+        { test: true },
+        0 // Trigger immediately
+      );
+      Alert.alert('Success', 'Test notification sent! Check if a pop-up appears.');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to send test notification: ' + error.message);
+    }
   };
 
   const handleClearCache = () => {
@@ -322,6 +337,13 @@ const SettingsScreen = ({ navigation }) => {
         <View style={styles.section}>
           <SectionHeader title="More" iconName="ellipsis-horizontal-outline" />
           <View style={styles.card}>
+            <ActionButton
+              title="Test Notification"
+              subtitle="Send a test push notification"
+              iconName="flask-outline"
+              onPress={handleTestNotification}
+            />
+            <View style={styles.divider} />
             <ActionButton
               title="Clear Cache"
               subtitle="Free up storage space"
