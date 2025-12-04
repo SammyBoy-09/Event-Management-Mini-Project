@@ -2,10 +2,12 @@
 
 A comprehensive full-stack event management system designed for college campuses, built with React Native (Expo) and Node.js + Express + MongoDB. Features include event creation, RSVP management, push notifications, QR code tickets, admin approval system, and real-time updates.
 
+![Version](https://img.shields.io/badge/Version-1.0.3-brightgreen)
 ![React Native](https://img.shields.io/badge/React%20Native-Expo-blue)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-green)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-brightgreen)
 ![Push Notifications](https://img.shields.io/badge/Push-Notifications-orange)
+![Android](https://img.shields.io/badge/Android-API%2034-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ## 📋 Table of Contents
@@ -61,11 +63,14 @@ A comprehensive full-stack event management system designed for college campuses
 - 📸 Scan QR codes for attendance marking (Admin/CR)
 - ✨ Visual ticket modal with event details
 
-**User Profile**
+**User Profile & Settings**
 - 👤 View and edit profile information
 - 📞 Update contact details
 - 🔐 Change password securely
 - 🔔 Manage push notification tokens
+- ⚙️ Settings screen with notification preferences
+- 🧪 Test notification feature for debugging
+- 🔒 Privacy controls and app preferences
 
 **Admin/CR Panel**
 - ⚡ Event approval dashboard
@@ -1136,11 +1141,14 @@ For detailed guides and troubleshooting:
 ---
 
 **Built with ❤️ for Campus Event Management**  
-*Last Updated: November 13, 2025*
+*Last Updated: December 4, 2025*
 
-### 🎉 Recent Updates
-- ✅ Firebase Cloud Messaging (FCM) configured
-- ✅ Push notifications tested and working on physical devices
-- ✅ Production build ready with all configurations
-- ✅ Repository cleaned up and organized
-- ✅ Documentation updated and streamlined
+### 🎉 Recent Updates (v1.0.3 - December 4, 2025)
+- ✅ **Notification Config Fixed** - Removed deprecated `useNextNotificationsApi`, updated to Android API 34
+- ✅ **Backend Validation Updated** - Removed 20-character minimum from event descriptions
+- ✅ **UI Improvements** - Moved test notification button to Settings screen for cleaner UX
+- ✅ **Backend Health Endpoint** - Added server warmup during splash screen for faster cold starts
+- ✅ **Custom App Icon** - Updated with professional branding (1024x1024)
+- ✅ **Production Build v1.0.3** - All features tested and ready for deployment
+- ✅ **Push Notifications** - Working correctly in standalone APK builds with FCM
+- ✅ **Auto-deploy** - Backend updates automatically deploy to Render from GitHub
