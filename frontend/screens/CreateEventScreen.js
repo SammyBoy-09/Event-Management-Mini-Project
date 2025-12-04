@@ -182,10 +182,6 @@ const CreateEventScreen = ({ navigation, route }) => {
       Alert.alert('Error', 'Please enter event description');
       return false;
     }
-    if (formData.description.length < 20) {
-      Alert.alert('Error', 'Description must be at least 20 characters');
-      return false;
-    }
     if (formData.date < new Date()) {
       Alert.alert('Error', 'Event date must be in the future');
       return false;
@@ -294,7 +290,7 @@ const CreateEventScreen = ({ navigation, route }) => {
           {/* Description */}
           <InputField
             label="Event Description *"
-            placeholder="Describe your event (minimum 20 characters)"
+            placeholder="Describe your event"
             value={formData.description}
             onChangeText={(text) => handleInputChange('description', text)}
             icon="list"

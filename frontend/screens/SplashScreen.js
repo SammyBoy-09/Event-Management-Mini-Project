@@ -251,9 +251,10 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     position: 'absolute',
-    bottom: SPACING.XXL * 4,
+    bottom: SPACING.XXL * 3,
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'center',
   },
   loadingText: {
     fontSize: TYPOGRAPHY.SIZES.SM,
