@@ -1,21 +1,27 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Animated,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, TYPOGRAPHY, SPACING } from '../constants/theme';
+import axios from 'axios';
 
 const { width, height } = Dimensions.get('window');
+
+// Backend URL for warming up
+const BACKEND_URL = 'https://event-management-mini-project.onrender.com/api';
 
 /**
  * SplashScreen Component
  * Displays a beautiful animated splash screen on app launch
  * Shows app logo, name, and tagline with smooth animations
+ * Pings backend to wake it up from cold start
  */
 const SplashScreen = ({ onFinish }) => {
   // Animation values
@@ -23,20 +29,74 @@ const SplashScreen = ({ onFinish }) => {
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const textOpacity = useRef(new Animated.Value(0)).current;
   const taglineOpacity = useRef(new Animated.Value(0)).current;
+  
+  // Backend warmup state
+  const [backendStatus, setBackendStatus] = useState('Connecting to server...');
+  const [isBackendReady, setIsBackendReady] = useState(false);
 
   useEffect(() => {
     // Start animation sequence
     startAnimationSequence();
-
-    // Auto-hide splash after 2.5 seconds
-    const timer = setTimeout(() => {
-      if (onFinish) {
-        onFinish();
-      }
-    }, 2500);
-
-    return () => clearTimeout(timer);
+    
+    // Warm up backend
+    warmUpBackend();
   }, []);
+
+  /**
+   * Warm up backend server (wake from cold start)
+   */
+  const warmUpBackend = async () => {
+    const startTime = Date.now();
+    const minDisplayTime = 1500; // Minimum 1.5 seconds to show animations
+    
+    try {
+      console.log('🔥 Warming up backend server...');
+      setBackendStatus('Waking up server...');
+      
+      // Try health endpoint first, fallback to root endpoint
+      let response;
+      try {
+        response = await axios.get(`${BACKEND_URL}/health`, {
+          timeout: 15000, // 15 second timeout
+        });
+      } catch (healthError) {
+        // Health endpoint might not exist yet (old deployment), try root
+        console.log('Health endpoint not available, trying root endpoint...');
+        response = await axios.get(BACKEND_URL.replace('/api', ''), {
+          timeout: 15000,
+        });
+      }
+      
+      const elapsedTime = Date.now() - startTime;
+      console.log(`✅ Backend ready in ${elapsedTime}ms`);
+      setBackendStatus('Server ready!');
+      setIsBackendReady(true);
+      
+      // Wait for minimum display time before finishing
+      const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+      setTimeout(() => {
+        if (onFinish) {
+          onFinish();
+        }
+      }, remainingTime);
+      
+    } catch (error) {
+      const elapsedTime = Date.now() - startTime;
+      console.log(`⚠️ Backend warmup took ${elapsedTime}ms (may still be starting)`);
+      console.error('Backend warmup error:', error.message);
+      
+      setBackendStatus('Server is starting up...');
+      
+      // Still proceed after minimum time even if ping fails
+      const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+      setTimeout(() => {
+        setIsBackendReady(true);
+        if (onFinish) {
+          onFinish();
+        }
+      }, remainingTime + 1000); // Extra 1 second grace period
+    }
+  };
 
   /**
    * Animate splash screen elements in sequence
@@ -120,6 +180,25 @@ const SplashScreen = ({ onFinish }) => {
         </Animated.Text>
       </View>
 
+      {/* Loading Indicator */}
+      <Animated.View
+        style={[
+          styles.loadingContainer,
+          {
+            opacity: taglineOpacity,
+          },
+        ]}
+      >
+        <ActivityIndicator size="large" color={COLORS.WHITE} />
+        <Text style={styles.loadingText}>{backendStatus}</Text>
+        {isBackendReady && (
+          <View style={styles.readyBadge}>
+            <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+            <Text style={styles.readyText}>Ready!</Text>
+          </View>
+        )}
+      </Animated.View>
+
       {/* Footer */}
       <Animated.View
         style={[
@@ -169,6 +248,33 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
     letterSpacing: 0.5,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    position: 'absolute',
+    bottom: SPACING.XXL * 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    fontSize: TYPOGRAPHY.SIZES.SM,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginTop: SPACING.MD,
+    letterSpacing: 0.5,
+  },
+  readyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: SPACING.MD,
+    paddingVertical: SPACING.XS,
+    borderRadius: 20,
+    marginTop: SPACING.SM,
+  },
+  readyText: {
+    fontSize: TYPOGRAPHY.SIZES.SM,
+    color: '#4CAF50',
+    marginLeft: SPACING.XS,
+    fontWeight: 'bold',
   },
   footer: {
     position: 'absolute',

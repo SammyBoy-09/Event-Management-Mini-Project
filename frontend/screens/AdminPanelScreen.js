@@ -12,9 +12,10 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../constants/theme';
-import api, { getAuthData, updateEventStatus } from '../api/api';
+import { getAuthData, updateEventStatus, getAllEvents } from '../api/api';
 import Button from '../components/Button';
 
 /**
@@ -36,43 +37,86 @@ const AdminPanelScreen = ({ navigation }) => {
     checkAdminAccess();
   }, []);
 
+  // Reload events when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('AdminPanel - Screen focused, userData:', userData);
+      if (userData?.role === 'admin' || userData?.role === 'cr') {
+        console.log('AdminPanel - Admin/CR detected, reloading events');
+        loadAllEvents();
+      } else {
+        console.log('AdminPanel - Not admin/CR, role:', userData?.role);
+      }
+    }, [userData])
+  );
+
   /**
    * Check if user has admin access
    */
   const checkAdminAccess = async () => {
     try {
-      const { userData } = await getAuthData();
-      console.log('Admin Panel - User Data:', userData);
+      const { userData, token } = await getAuthData();
+      console.log('=== ADMIN PANEL ACCESS CHECK ===');
+      console.log('Admin Panel - Has Token:', !!token);
+      console.log('Admin Panel - User Data:', JSON.stringify(userData, null, 2));
       console.log('Admin Panel - User Role:', userData?.role);
+      console.log('Admin Panel - Is Admin?:', userData?.role === 'admin');
+      console.log('Admin Panel - Is CR?:', userData?.role === 'cr');
+      console.log('================================');
+      
       setUserData(userData);
       
       if (userData?.role === 'admin' || userData?.role === 'cr') {
-        console.log('Admin Panel - Access Granted');
+        console.log('✅ Admin Panel - Access Granted - Loading events...');
         loadAllEvents();
       } else {
-        console.log('Admin Panel - Access Denied, Role:', userData?.role);
+        console.log('❌ Admin Panel - Access Denied, Role:', userData?.role);
+        Alert.alert(
+          'Access Denied', 
+          `This screen is only for admins and CRs. Your role: ${userData?.role || 'unknown'}`
+        );
         setLoading(false);
       }
     } catch (error) {
-      console.error('Error checking admin access:', error);
+      console.error('❌ Error checking admin access:', error);
       setLoading(false);
     }
   };
 
   /**
    * Load all events from API
+   * Admin/CR should see ALL events (pending, approved, rejected)
    */
   const loadAllEvents = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/events');
-      console.log('AdminPanel - All events response:', response.data);
-      const events = response.data.data || response.data.events || [];
+      console.log('AdminPanel - Loading all events...');
+      console.log('AdminPanel - User role:', userData?.role);
+      
+      // Request ALL events without pagination limit for admin panel
+      const response = await getAllEvents({ limit: 1000 });
+      console.log('AdminPanel - Raw API response:', JSON.stringify(response));
+      
+      const events = response.data || response.events || [];
+      console.log('AdminPanel - Number of events received:', events.length);
+      console.log('AdminPanel - Events breakdown:', {
+        total: events.length,
+        pending: events.filter(e => e.status === 'pending').length,
+        approved: events.filter(e => e.status === 'approved').length,
+        rejected: events.filter(e => e.status === 'rejected').length
+      });
+      console.log('AdminPanel - Event details:', events.map(e => ({ 
+        title: e.title, 
+        status: e.status,
+        date: e.date 
+      })));
+      
       setAllEvents(events);
       applyFilter('all', events);
     } catch (error) {
-      console.error('Error loading events:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to load events');
+      console.error('AdminPanel - Error loading events:', error);
+      console.error('AdminPanel - Error details:', error.response?.data);
+      Alert.alert('Error', error.message || 'Failed to load events');
     } finally {
       setLoading(false);
     }

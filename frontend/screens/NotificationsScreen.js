@@ -18,6 +18,7 @@ import {
   deleteNotification,
   deleteAllNotifications,
 } from '../api/api';
+import { scheduleLocalNotification } from '../utils/pushNotifications';
 import AnimatedCard from '../components/AnimatedCard';
 
 const NotificationsScreen = ({ navigation }) => {
@@ -47,6 +48,20 @@ const NotificationsScreen = ({ navigation }) => {
     setRefreshing(true);
     await loadNotifications();
     setRefreshing(false);
+  };
+
+  const testNotification = async () => {
+    try {
+      await scheduleLocalNotification(
+        '🧪 Test Notification',
+        'This is a test notification to verify the notification system is working!',
+        { test: true },
+        0 // Trigger immediately
+      );
+      Alert.alert('Success', 'Test notification sent! Check if a pop-up appears.');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to send test notification: ' + error.message);
+    }
   };
 
   const handleNotificationPress = async (notification) => {
@@ -221,6 +236,12 @@ const NotificationsScreen = ({ navigation }) => {
         <View style={{ width: 24 }} />
       </View>
 
+      {/* Test Notification Button */}
+      <TouchableOpacity style={styles.testButton} onPress={testNotification}>
+        <Ionicons name="flask" size={20} color="#FFF" />
+        <Text style={styles.testButtonText}>Test Notification</Text>
+      </TouchableOpacity>
+
       {notifications.length > 0 && (
         <View style={styles.actions}>
           <TouchableOpacity style={styles.actionButton} onPress={handleMarkAllRead}>
@@ -353,6 +374,25 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     padding: SPACING.XS,
+  },
+  testButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#6C63FF',
+    paddingVertical: SPACING.SM,
+    paddingHorizontal: SPACING.MD,
+    borderRadius: RADIUS.SM,
+    marginHorizontal: SPACING.LG,
+    marginTop: SPACING.SM,
+    marginBottom: SPACING.XS,
+    justifyContent: 'center',
+    gap: SPACING.XS,
+  },
+  testButtonText: {
+    color: '#FFF',
+    fontSize: TYPOGRAPHY.SIZES.SM,
+    fontWeight: '600',
+    marginLeft: SPACING.XS,
   },
   emptyContainer: {
     flex: 1,

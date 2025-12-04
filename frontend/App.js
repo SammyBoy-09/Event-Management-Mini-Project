@@ -1,4 +1,4 @@
-// Polyfill for TextEncoder (required for QR code generation on React Native)
+
 import { TextEncoder, TextDecoder } from 'text-encoding';
 if (typeof global.TextEncoder === 'undefined') {
   global.TextEncoder = TextEncoder;
@@ -115,17 +115,26 @@ export default function App() {
 
       // Listen for notifications when app is in foreground
       notificationListener.current = addNotificationReceivedListener((notification) => {
-        console.log('Notification received:', notification);
+        console.log('📬 Notification received in foreground:');
+        console.log('  - Title:', notification.request.content.title);
+        console.log('  - Body:', notification.request.content.body);
+        console.log('  - Data:', notification.request.content.data);
+        console.log('  - Should show alert: YES (configured in handler)');
       });
 
       // Listen for notification taps
       responseListener.current = addNotificationResponseListener((response) => {
         const data = response.notification.request.content.data;
-        console.log('Notification tapped:', data);
+        console.log('👆 Notification tapped!');
+        console.log('  - Event ID:', data.eventId);
+        console.log('  - Data:', data);
 
         // Navigate to event details if eventId is present
         if (data.eventId && navigationRef.current) {
+          console.log('  - Navigating to EventDetails screen');
           navigationRef.current.navigate('EventDetails', { eventId: data.eventId });
+        } else {
+          console.log('  - No eventId found, not navigating');
         }
       });
     } catch (error) {

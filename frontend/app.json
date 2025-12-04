@@ -34,7 +34,10 @@
         "VIBRATE"
       ],
       "useNextNotificationsApi": true,
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-3940256099942544~3347511713"
+      }
     },
     "notification": {
       "icon": "./assets/icon.png",
@@ -56,6 +59,9 @@
       "eas": {
         "projectId": "f4bbeab9-7030-40d9-83d3-8ff08a9d4173"
       }
+    },
+    "hooks": {
+      "postPublish": []
     }
   }
 }

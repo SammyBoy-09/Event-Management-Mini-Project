@@ -98,13 +98,20 @@ exports.getAllEvents = async (req, res) => {
     }
 
     // Status filter with proper moderation logic
+    console.log('getAllEvents - User role:', req.student.role);
+    console.log('getAllEvents - User ID:', req.student.id);
+    console.log('getAllEvents - Query params:', req.query);
+    
     if (req.student.role === 'admin' || req.student.role === 'cr' || req.student.role === 'CR') {
+      console.log('getAllEvents - Admin/CR access granted - showing all events');
       // Admins and CRs can filter by status (see all events)
       if (status) {
         query.status = status;
+        console.log('getAllEvents - Filtering by status:', status);
       }
       // If no status filter, admins see all events (pending, approved, rejected)
     } else {
+      console.log('getAllEvents - Regular user access - filtering events');
       // Regular users see:
       // 1. All approved events (public)
       // 2. Their own events regardless of status (pending/rejected)
@@ -141,6 +148,7 @@ exports.getAllEvents = async (req, res) => {
     }
 
     // Execute query with pagination
+    console.log('getAllEvents - Final query:', JSON.stringify(query));
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const events = await Event.find(query)
       .populate('createdBy', 'name email usn role')
@@ -148,6 +156,9 @@ exports.getAllEvents = async (req, res) => {
       .sort({ date: 1, createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
+    
+    console.log('getAllEvents - Found events:', events.length);
+    console.log('getAllEvents - Event statuses:', events.map(e => ({ title: e.title, status: e.status })));
 
     // Add hasRSVP flag for each event (check if current user has RSVP'd)
     const eventsWithRSVP = events.map(event => {

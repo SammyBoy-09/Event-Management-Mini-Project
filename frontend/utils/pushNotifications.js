@@ -5,12 +5,17 @@ import { Platform } from 'react-native';
 import api from '../api/api';
 
 // Configure how notifications are displayed when app is in foreground
+// This ensures notifications show as pop-ups even when app is open
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
+  handleNotification: async (notification) => {
+    console.log('🔔 Notification Handler - Received notification:', notification);
+    return {
+      shouldShowAlert: true,    // Show banner/alert
+      shouldPlaySound: true,     // Play notification sound
+      shouldSetBadge: true,      // Update badge count
+      shouldShowBanner: true,    // Show banner on Android
+    };
+  },
 });
 
 /**
